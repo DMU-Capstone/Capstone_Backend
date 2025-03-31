@@ -1,16 +1,20 @@
 package com.dumbbelling.capstone.global.security.jwt;
 
 import com.dumbbelling.capstone.domain.client.auth.dto.CustomUserDetails;
+import com.dumbbelling.capstone.domain.client.auth.dto.LoginRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,7 +22,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.StreamUtils;
 
+@Slf4j
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
@@ -31,8 +37,22 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         //클라이언트 요청에서 username password 추출
-        String username = obtainUsername(request);
-        String password = obtainPassword(request);
+        LoginRequest loginRequest = new LoginRequest();
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            ServletInputStream inputStream = request.getInputStream();
+            String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+            loginRequest  = objectMapper.readValue(messageBody, LoginRequest.class);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        log.info("사용자 번호 {}",loginRequest.getUsername());
+
+        String username = loginRequest.getUsername();
+        String password = loginRequest.getPassword();
         //인증을 위해 토큰으로 변환
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(username,password,null);
 
@@ -52,6 +72,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String role = auth.getAuthority();
         String token = jwtUtil.createJwt(username,role,60*60*10L);
         response.addHeader("Authorization", "Bearer " + token);
+        /*
+            유저정보 반환로직
+         */
     }
 
     //로그인 실패시 실행하는 메소드
