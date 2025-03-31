@@ -1,5 +1,7 @@
 package com.dumbbelling.capstone.global.config;
 
+import com.dumbbelling.capstone.global.security.jwt.JWTFilter;
+import com.dumbbelling.capstone.global.security.jwt.JWTUtil;
 import com.dumbbelling.capstone.global.security.jwt.LoginFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,9 +21,10 @@ public class SecurityConfig {
 
     //AuthenticationManager가 인자로 받을 AuthenticationConfiguraion 객체 생성자 주입
     private final AuthenticationConfiguration authenticationConfiguration;
-
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration) {
+    private final JWTUtil jwtUtil;
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration,JWTUtil jwtUtil) {
         this.authenticationConfiguration = authenticationConfiguration;
+        this.jwtUtil = jwtUtil;
     }
     //AuthenticationManager Bean 등록
     @Bean
@@ -53,8 +56,11 @@ public class SecurityConfig {
          */
         http.authorizeHttpRequests(auth->auth.anyRequest().permitAll());
 
+        //JWTFilter 등록
+        http.addFilterAfter(new JWTFilter(jwtUtil), LoginFilter.class);
+
         //필터 추가 LoginFilter()는 인자를 받음 (AuthenticationManager() 메소드에 authenticationConfiguration 객체를 넣어야 함)
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
         //세션을 아예 안만들도록 설정 -> 로그인해도 서버에 세션객체 저장X
         http.sessionManagement((session)->session
