@@ -1,5 +1,6 @@
-package com.waitit.capstone.domain.client.auth;
+package com.waitit.capstone.domain.client.auth.controller;
 
+import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
 import com.waitit.capstone.global.security.jwt.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @AllArgsConstructor
 public class ReissueController {
     private final JWTUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response){
@@ -57,7 +59,9 @@ public class ReissueController {
         String newAccess = jwtUtil.createJwt("access",username,role,600000L);
         String newRefresh = jwtUtil.createJwt("refresh", username, role, 86400000L);
 
-
+        //기존 리프레시 삭제 -> 새로 저장
+        refreshTokenService.delete(username);
+        refreshTokenService.save(username,newRefresh,86400000L);
 
         //response
         response.setHeader("access",newAccess);

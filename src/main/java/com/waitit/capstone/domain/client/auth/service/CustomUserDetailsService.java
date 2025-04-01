@@ -1,4 +1,4 @@
-package com.waitit.capstone.domain.client.auth;
+package com.waitit.capstone.domain.client.auth.service;
 
 import com.waitit.capstone.domain.client.auth.dto.CustomUserDetails;
 import com.waitit.capstone.domain.client.member.Member;

@@ -1,5 +1,6 @@
 package com.waitit.capstone.global.config;
 
+import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
 import com.waitit.capstone.global.security.jwt.JWTFilter;
 import com.waitit.capstone.global.security.jwt.JWTUtil;
 import com.waitit.capstone.global.security.jwt.LoginFilter;
@@ -26,9 +27,13 @@ public class SecurityConfig {
     //AuthenticationManager가 인자로 받을 AuthenticationConfiguraion 객체 생성자 주입
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration,JWTUtil jwtUtil) {
+    private final RefreshTokenService refreshTokenService;
+
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
+                          RefreshTokenService refreshTokenService) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
     }
     //AuthenticationManager Bean 등록
     @Bean
@@ -82,7 +87,7 @@ public class SecurityConfig {
         http.addFilterAfter(new JWTFilter(jwtUtil), LoginFilter.class);
 
         //필터 추가 LoginFilter()는 인자를 받음 (AuthenticationManager() 메소드에 authenticationConfiguration 객체를 넣어야 함)
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil,refreshTokenService), UsernamePasswordAuthenticationFilter.class);
 
         //세션을 아예 안만들도록 설정 -> 로그인해도 서버에 세션객체 저장X
         http.sessionManagement((session)->session

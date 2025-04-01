@@ -2,6 +2,7 @@ package com.waitit.capstone.global.security.jwt;
 
 import com.waitit.capstone.domain.client.auth.dto.LoginRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Iterator;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,14 +24,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.util.StreamUtils;
 
 @Slf4j
+@AllArgsConstructor
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
-    public LoginFilter(AuthenticationManager authenticationManager,JWTUtil jwtUtil) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-    }
 
 
     @Override
@@ -71,6 +71,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         //토큰생성
         String access = jwtUtil.createJwt("access",username, role ,600000L);
         String refresh = jwtUtil.createJwt("refresh",username, role ,86400000L);
+
+        //리프레쉬 토큰 저장
+        refreshTokenService.save(username, refresh, 86400000L);
 
         //응답 설정
         response.setHeader("access",access);

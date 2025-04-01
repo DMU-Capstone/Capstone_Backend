@@ -1,4 +1,5 @@
-package com.waitit.capstone.domain.client.auth;
+package com.waitit.capstone.domain.client.auth.controller;
+import com.waitit.capstone.domain.client.auth.service.AuthService;
 import com.waitit.capstone.domain.client.auth.dto.JoinRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
