@@ -2,6 +2,7 @@ package com.waitit.capstone.domain.client.auth.controller;
 
 import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
 import com.waitit.capstone.global.security.jwt.JWTUtil;
+import com.waitit.capstone.global.security.jwt.RefreshTokenResolver;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,55 +20,40 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class ReissueController {
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenResolver refreshTokenResolver;
 
     @PostMapping("/reissue")
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response){
+    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 
-        //get refresh token
-        String refresh = null;
-        Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-            if(cookie.getName().equals("refresh")){
-                refresh = cookie.getValue();
-            }
-        }
+        //리프레쉬 토큰 리졸버로 판단
+        String refresh = refreshTokenResolver.resolve(request);
 
-        if(refresh == null){
-            //response status code
+        if (refresh == null) {
             return new ResponseEntity<>("refresh token null", HttpStatus.BAD_REQUEST);
         }
 
-        //expired check
-        try{
+        try {
             jwtUtil.isExpired(refresh);
-        }catch (ExpiredJwtException e){
+        } catch (ExpiredJwtException e) {
             return new ResponseEntity<>("refresh token expired", HttpStatus.BAD_REQUEST);
         }
 
-        //토큰이 refresh인지 확인(발급시 페이로드에 평시)
-        String category = jwtUtil.getCategory(refresh);
-
-        if(!category.equals("refresh")){
-            //response status code
+        if (!"refresh".equals(jwtUtil.getCategory(refresh))) {
             return new ResponseEntity<>("invalid refresh token", HttpStatus.BAD_REQUEST);
         }
 
         String username = jwtUtil.getUsername(refresh);
         String role = jwtUtil.getRole(refresh);
 
-        //make new JWT
-        String newAccess = jwtUtil.createJwt("access",username,role,600000L);
+        String newAccess = jwtUtil.createJwt("access", username, role, 600000L);
         String newRefresh = jwtUtil.createJwt("refresh", username, role, 86400000L);
 
-        //기존 리프레시 삭제 -> 새로 저장
         refreshTokenService.delete(username);
-        refreshTokenService.save(username,newRefresh,86400000L);
+        refreshTokenService.save(username, newRefresh, 86400000L);
 
-        //response
-        response.setHeader("access",newAccess);
+        response.setHeader("access", newAccess);
         response.addCookie(jwtUtil.createCookie("refresh", newRefresh));
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
 }

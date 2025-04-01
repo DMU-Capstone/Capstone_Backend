@@ -1,9 +1,11 @@
 package com.waitit.capstone.global.config;
 
 import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
+import com.waitit.capstone.global.security.jwt.CustomLogoutFilter;
 import com.waitit.capstone.global.security.jwt.JWTFilter;
 import com.waitit.capstone.global.security.jwt.JWTUtil;
 import com.waitit.capstone.global.security.jwt.LoginFilter;
+import com.waitit.capstone.global.security.jwt.RefreshTokenResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +19,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -28,12 +31,14 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenResolver refreshTokenResolver;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
-                          RefreshTokenService refreshTokenService) {
+                          RefreshTokenService refreshTokenService, RefreshTokenResolver refreshTokenResolver) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
         this.refreshTokenService = refreshTokenService;
+        this.refreshTokenResolver = refreshTokenResolver;
     }
     //AuthenticationManager Bean 등록
     @Bean
@@ -88,6 +93,9 @@ public class SecurityConfig {
 
         //필터 추가 LoginFilter()는 인자를 받음 (AuthenticationManager() 메소드에 authenticationConfiguration 객체를 넣어야 함)
         http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil,refreshTokenService), UsernamePasswordAuthenticationFilter.class);
+
+        //로그아웃 필터 추가
+        http.addFilterBefore(new CustomLogoutFilter(jwtUtil,refreshTokenService,refreshTokenResolver), LogoutFilter.class);
 
         //세션을 아예 안만들도록 설정 -> 로그인해도 서버에 세션객체 저장X
         http.sessionManagement((session)->session

@@ -6,6 +6,7 @@ import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -58,28 +59,40 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
     //로그인 성공시 실행하는 메소드 (여기서 JWT를 발급하면 됨)
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException {
 
-        //유저정보
         String username = authentication.getName();
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        Collection<? extends  GrantedAuthority> authorities = authentication.getAuthorities();
-        Iterator<? extends  GrantedAuthority> iterator = authorities.iterator();
-        GrantedAuthority auth = iterator.next();
-        String role = auth.getAuthority();
+        long accessExpireMs = 600000L;
+        long refreshExpireMs = 86400000L;
 
-        //토큰생성
-        String access = jwtUtil.createJwt("access",username, role ,600000L);
-        String refresh = jwtUtil.createJwt("refresh",username, role ,86400000L);
+        String access = jwtUtil.createJwt("access", username, role, accessExpireMs);
+        String refresh = jwtUtil.createJwt("refresh", username, role, refreshExpireMs);
 
-        //리프레쉬 토큰 저장
-        refreshTokenService.save(username, refresh, 86400000L);
+        // Refresh 토큰 저장
+        refreshTokenService.save(username, refresh, refreshExpireMs);
 
-        //응답 설정
-        response.setHeader("access",access);
-        response.addCookie(jwtUtil.createCookie("refresh",refresh));
-        response.setStatus(HttpStatus.OK.value());
+        // 클라이언트 타입 구분
+        String clientType = request.getHeader("X-Client-Type");
 
+        // 공통: access token은 헤더에
+        response.setHeader("Authorization", "Bearer " + access);
+
+        if ("mobile".equalsIgnoreCase(clientType)) {
+            // 모바일: JSON 응답
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"access\": \"" + access + "\", \"refresh\": \"" + refresh + "\"}");
+        } else {
+            // 웹: HttpOnly 쿠키로 refresh 토큰 전달
+            Cookie refreshCookie = jwtUtil.createCookie("refresh", refresh);
+            refreshCookie.setSecure(true);
+            refreshCookie.setPath("/");
+            response.addCookie(refreshCookie);
+
+            response.setStatus(HttpStatus.OK.value());
+        }
     }
 
     //로그인 실패시 실행하는 메소드
