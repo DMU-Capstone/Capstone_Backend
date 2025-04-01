@@ -1,4 +1,6 @@
 package com.waitit.capstone.domain.client.auth.controller;
+
+import java.util.*;
 import com.waitit.capstone.domain.client.auth.service.AuthService;
 import com.waitit.capstone.domain.client.auth.dto.JoinRequest;
 import jakarta.validation.Valid;
@@ -22,6 +24,11 @@ public class AuthController {
     public ResponseEntity<?> join(@Valid @RequestBody JoinRequest joinRequest){
         log.info("회원가입 요청: {}", joinRequest.getName());
         authService.join(joinRequest);
-        return ResponseEntity.ok("회원가입에 성공하였습니다.");
+
+        //추후 공통 응답바디로 변경
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "회원가입에 성공하였습니다.");
+
+        return ResponseEntity.ok(responseBody);
     }
 }

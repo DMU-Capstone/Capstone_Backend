@@ -74,7 +74,7 @@ public class CustomLogoutFilter extends GenericFilterBean {
         expiredCookie.setMaxAge(0);
         expiredCookie.setPath("/");
         response.addCookie(expiredCookie);
-
+        response.getWriter().write("{\"message\": \"로그아웃 되었습니다.\"}");
         response.setStatus(HttpServletResponse.SC_OK);
     }
 }

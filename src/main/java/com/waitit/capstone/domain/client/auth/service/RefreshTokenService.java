@@ -1,5 +1,7 @@
 package com.waitit.capstone.domain.client.auth.service;
 
+import com.waitit.capstone.domain.client.member.Member;
+import com.waitit.capstone.domain.client.member.MemberRepository;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -11,6 +13,7 @@ public class RefreshTokenService {
 
     private final RedisTemplate<String,String> redisTemplate;
     private static final String REFRESH_PREFIX = "refresh";
+    private final MemberRepository memberRepository;
 
     public void save(String username,String refresh,Long expireMS){
         redisTemplate.opsForValue().set(
@@ -28,5 +31,8 @@ public class RefreshTokenService {
     public void delete(String username){
         redisTemplate.delete(REFRESH_PREFIX + username);
     }
-
+    public String findMember(String phone){
+        Member member = memberRepository.findMemberByPhoneNumber(phone);
+        return member.getName();
+    }
 }
