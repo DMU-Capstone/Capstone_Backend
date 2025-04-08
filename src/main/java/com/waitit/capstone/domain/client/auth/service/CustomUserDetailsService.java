@@ -1,7 +1,7 @@
 package com.waitit.capstone.domain.client.auth.service;
 
 import com.waitit.capstone.domain.client.auth.dto.CustomUserDetails;
-import com.waitit.capstone.domain.client.member.Member;
+import com.waitit.capstone.domain.client.member.Entity.Member;
 import com.waitit.capstone.domain.client.member.MemberRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,9 +1,9 @@
 package com.waitit.capstone.domain.client.auth.service;
 
 import com.waitit.capstone.domain.client.auth.dto.JoinRequest;
-import com.waitit.capstone.domain.client.member.Member;
+import com.waitit.capstone.domain.client.member.Entity.Member;
 import com.waitit.capstone.domain.client.member.MemberRepository;
-import com.waitit.capstone.domain.client.member.Role;
+import com.waitit.capstone.domain.client.member.Entity.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

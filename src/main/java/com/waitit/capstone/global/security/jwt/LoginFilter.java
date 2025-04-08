@@ -86,7 +86,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                     "\"username\": \"" + username + "\", " +
                     "\"name\": \"" + name + "\", " +
                     "\"role\": \"" + role + "\", " +
-                    "\"access\": \"" + access + "\", " +
                     "\"refresh\": \"" + refresh + "\"}";
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

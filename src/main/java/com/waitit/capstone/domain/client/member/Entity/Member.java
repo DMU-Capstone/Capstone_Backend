@@ -1,4 +1,4 @@
-package com.waitit.capstone.domain.client.member;
+package com.waitit.capstone.domain.client.member.Entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -40,5 +40,10 @@ public class Member {
         this.phoneNumber = phoneNumber;
         this.gender = gender;
         this.role = Role.USER;
+    }
+    public void updateProfile(String name, String nickname,String password) {
+        this.name = name;
+        this.nickname = nickname;
+        this.password = password;
     }
 }

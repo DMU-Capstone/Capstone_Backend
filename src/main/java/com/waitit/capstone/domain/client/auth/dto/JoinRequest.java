@@ -1,6 +1,6 @@
 package com.waitit.capstone.domain.client.auth.dto;
 
-import com.waitit.capstone.domain.client.member.Gender;
+import com.waitit.capstone.domain.client.member.Entity.Gender;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;

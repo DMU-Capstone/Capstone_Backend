@@ -1,13 +1,14 @@
 package com.waitit.capstone.domain.client.auth.dto;
 
-import com.waitit.capstone.domain.client.member.Member;
+import com.waitit.capstone.domain.client.member.Entity.Member;
 import java.util.Collection;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
+@Getter
 @AllArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
