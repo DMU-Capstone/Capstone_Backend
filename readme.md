@@ -1,4 +1,8 @@
-# Getting Started
+# Wait:It 기다리는 즐거움
+
+ ~~로그인 회원가입 기능~~
+
+Host 등록 기능 개발중
 
 ### Reference Documentation
 

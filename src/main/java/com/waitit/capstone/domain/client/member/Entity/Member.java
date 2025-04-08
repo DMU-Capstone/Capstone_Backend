@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,8 @@ public class Member {
     private Gender gender;
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private LocalDateTime create_time;
 
     @Builder
     public Member(String name,String nickName,String password,String phoneNumber,Gender gender,Role role){
