@@ -5,6 +5,7 @@ import com.waitit.capstone.domain.client.auth.service.AuthService;
 import com.waitit.capstone.domain.client.auth.dto.JoinRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,7 @@ public class AuthController {
         Map<String, String> responseBody = new HashMap<>();
         responseBody.put("message", "회원가입에 성공하였습니다.");
 
-        return ResponseEntity.ok(responseBody);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
+
     }
 }
