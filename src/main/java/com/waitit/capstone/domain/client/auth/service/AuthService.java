@@ -29,6 +29,7 @@ public class AuthService {
                 .gender(joinRequest.getGender())
                 .role(Role.USER)
                 .build();
+
         memberRepository.save(member);
     }
 }

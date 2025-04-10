@@ -6,6 +6,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -20,7 +21,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -35,8 +37,13 @@ public class Member {
 
     private LocalDateTime create_time;
 
+    @PrePersist
+    protected void onCreate() {
+        this.create_time = LocalDateTime.now();
+    }
+
     @Builder
-    public Member(String name,String nickName,String password,String phoneNumber,Gender gender,Role role){
+    public Member(String name, String nickName, String password, String phoneNumber, Gender gender, Role role) {
         this.name = name;
         this.nickname = nickName;
         this.password = password;
@@ -44,7 +51,8 @@ public class Member {
         this.gender = gender;
         this.role = Role.USER;
     }
-    public void updateProfile(String name, String nickname,String password) {
+
+    public void updateProfile(String name, String nickname, String password) {
         this.name = name;
         this.nickname = nickname;
         this.password = password;

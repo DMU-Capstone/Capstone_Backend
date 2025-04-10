@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 
 @AllArgsConstructor
+@RestController
 @RequestMapping("/admin")
 public class AdminController {
 
@@ -25,7 +27,7 @@ public class AdminController {
 
     //모든 회원 조회
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PageResponse<AllUserRequest>> getAll(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
         PageResponse<AllUserRequest> response = adminService.getAllUser(pageable);
@@ -34,16 +36,15 @@ public class AdminController {
 
     //회원 정보 수정
     @PatchMapping("/users")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(@RequestBody UpdatedRequest request){
-
         adminService.updateMember(request);
         return ResponseEntity.ok("회원정보가 수정되었습니다.");
     }
 
     //회원 삭제
     @DeleteMapping("/users")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> DeleteUser(@RequestParam Long id){
         adminService.deleteMember(id);
         return ResponseEntity.ok("회원이 삭제되었습니다.");

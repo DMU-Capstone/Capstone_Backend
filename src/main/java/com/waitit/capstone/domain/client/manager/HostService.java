@@ -15,20 +15,7 @@ public class HostService {
     }
     //호스트 정보 저장
     public void saveHost(HostRequest request){
-        Host host = Host.builder()
-                .imgUrl(request.getImgUrl())
-                .hostName(request.getHostName())
-                .maxPeople(request.getMaxPeople())
-                .hostManagerName(request.getHostManagerName())
-                .hostPhoneNumber(request.getHostPhoneNumber())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .keyword(request.getKeyword())
-                .description(request.getDescription())
-                .startTime(request.getStartTime())
-                .endTime(request.getEndTime())
-                .build();
-
+        Host host = request.toEntity();
         hostRepository.save(host);
         //레디스에 세션 올리기 필요
     }

@@ -1,8 +1,10 @@
 package com.waitit.capstone.global.util;
 
 import java.util.List;
+import lombok.Getter;
 import org.springframework.data.domain.Page;
 
+@Getter
 public class PageResponse<T> {
     private List<T> content;
     private int page;

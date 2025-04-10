@@ -21,14 +21,15 @@ public class AdminService {
     private final MemberRepository memberRepository;
 
     //모든 유저를 조회후 페이징
-    public PageResponse<AllUserRequest> getAllUser(Pageable pageable){
+    public PageResponse<AllUserRequest> getAllUser(Pageable pageable) {
         Page<Member> members = memberRepository.findAll(pageable);
-        Page<AllUserRequest> allUserRequests = members.map(AllUserRequest::new);
+        Page<AllUserRequest> allUserRequests = members.map(AllUserRequest::from);
 
         return new PageResponse<>(allUserRequests);
     }
+
     //유저 리퀘스트 바디를 받아서 수정후 저장
-    public void updateMember(UpdatedRequest request){
+    public void updateMember(UpdatedRequest request) {
         Long memberId = Long.parseLong(request.getId());
         Member member = memberRepository.findMemberById(memberId);
 
@@ -37,7 +38,7 @@ public class AdminService {
     }
 
     //아이디로 삭제
-    public void deleteMember(Long id){
+    public void deleteMember(Long id) {
         memberRepository.deleteById(id);
     }
 
