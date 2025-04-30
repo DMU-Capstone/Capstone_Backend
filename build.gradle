@@ -41,6 +41,13 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     //유효성 검사
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // 맵 스트럭트 API
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.projectlombok:lombok'
+    // 맵 스트럭트 어노테이션 프로세서 (수정됨)
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    // 롬복과의 충돌 방지
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
 }
 

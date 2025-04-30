@@ -2,7 +2,9 @@ package com.waitit.capstone.domain.client.manager;
 
 import com.waitit.capstone.domain.client.manager.dto.HostRequest;
 import com.waitit.capstone.domain.client.manager.dto.HostResponse;
+import com.waitit.capstone.domain.client.manager.dto.SessionListDto;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @AllArgsConstructor
@@ -34,8 +37,16 @@ public class HostController {
     }
 
     @GetMapping("/{id}")
+    @ResponseBody
     public ResponseEntity<HostResponse> getHost(@PathVariable Long id){
             HostResponse response = hostService.getHost(id);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/sessions")
+    @ResponseBody
+    public ResponseEntity<List<SessionListDto>> getSessionList(){
+        List<SessionListDto> sessions = hostService.getAllSessions();
+        return ResponseEntity.status(HttpStatus.OK).body(sessions);
     }
 }
