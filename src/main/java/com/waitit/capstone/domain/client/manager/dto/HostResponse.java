@@ -15,20 +15,4 @@ public record HostResponse(
         String description,
         LocalDateTime startTime,
         LocalDateTime endTime) {
-
-    public static HostResponse from(Host host) {
-        return new HostResponse(
-                host.getImgUrl(),
-                host.getHostName(),
-                host.getMaxPeople(),
-                host.getHostManagerName(),
-                host.getHostPhoneNumber(),
-                host.getLatitude(),
-                host.getLongitude(),
-                host.getKeyword(),
-                host.getDescription(),
-                host.getStartTime(),
-                host.getEndTime()
-        );
-    }
 }

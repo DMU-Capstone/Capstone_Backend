@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class HostService {
     private final HostRepository hostRepository;
     private final StringRedisTemplate redisTemplate;
+    private final HostMapper hostMapper;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
 
     public boolean hostExist(Long id) {
@@ -26,7 +27,7 @@ public class HostService {
 
     //호스트 정보 저장
     public void saveHost(HostRequest request) {
-        Host host = request.toEntity();
+        Host host = hostMapper.toEntity(request);
         String key = "waitList" + host.getId();
         hostRepository.save(host);
         //세션 등록
@@ -44,7 +45,7 @@ public class HostService {
     //요청받은 아이디로 db에 호스트 조회
     public HostResponse getHost(Long id) {
         Host host = hostRepository.findHostById(id);
-        return HostResponse.from(host);
+        return hostMapper.hostToDto(host);
     }
 
     public List<SessionListDto> getAllSessions() {

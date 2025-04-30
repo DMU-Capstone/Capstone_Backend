@@ -14,7 +14,7 @@ public class AuthService {
 
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-
+    //회원가입
     public void join(JoinRequest joinRequest) {
         String nickname = joinRequest.getNickName();
 
@@ -32,4 +32,5 @@ public class AuthService {
 
         memberRepository.save(member);
     }
+    //휴대폰 번호 인증
 }

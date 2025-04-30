@@ -19,11 +19,11 @@ import org.springframework.stereotype.Service;
 public class AdminService {
 
     private final MemberRepository memberRepository;
-
+    private final AdminMapper adminMapper;
     //모든 유저를 조회후 페이징
     public PageResponse<AllUserRequest> getAllUser(Pageable pageable) {
         Page<Member> members = memberRepository.findAll(pageable);
-        Page<AllUserRequest> allUserRequests = members.map(AllUserRequest::from);
+        Page<AllUserRequest> allUserRequests = members.map(adminMapper::toAllUserRequest);
 
         return new PageResponse<>(allUserRequests);
     }
@@ -43,6 +43,6 @@ public class AdminService {
     }
 
     //이벤트 배너 등록
-
+    //이벤트 배너 조회
     //대기열 현황 조회
 }
