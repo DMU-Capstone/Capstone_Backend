@@ -1,5 +1,6 @@
 package com.waitit.capstone.domain.admin;
 
+import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 import com.waitit.capstone.global.util.PageResponse;
@@ -65,4 +66,12 @@ public class AdminController {
 
     //대기열 현황 조회
 
+    //모든 회원 조회
+    @GetMapping("/hosts")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PageResponse<AllHostRequest>> getAllHost(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
+        PageResponse<AllHostRequest> response = adminService.getAllHost(pageable);
+        return ResponseEntity.ok(response);
+    }
 }

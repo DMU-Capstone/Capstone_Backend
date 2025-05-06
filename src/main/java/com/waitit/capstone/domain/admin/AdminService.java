@@ -3,19 +3,16 @@ package com.waitit.capstone.domain.admin;
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
-import com.waitit.capstone.domain.client.auth.dto.CustomUserDetails;
+
 import com.waitit.capstone.domain.client.manager.Host;
 import com.waitit.capstone.domain.client.manager.HostMapper;
 import com.waitit.capstone.domain.client.manager.HostRepository;
 import com.waitit.capstone.domain.client.member.Entity.Member;
 import com.waitit.capstone.domain.client.member.MemberRepository;
 import com.waitit.capstone.global.util.PageResponse;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 
@@ -51,10 +48,11 @@ public class AdminService {
 
     //이벤트 배너 등록
     //이벤트 배너 조회
-    //대기열 현황 조회
+
+    //모든 대기열 내역 조회
     public PageResponse<AllHostRequest> getAllHost(Pageable pageable){
         Page<Host> hosts = hostRepository.findAll(pageable);
-        Page<AllHostRequest> allHostRequests = hosts.map(hostMapper::toAllHostRequest);
+        Page<AllHostRequest> allHostRequests = hosts.map(adminMapper::toAllHostRequest);
 
         return new PageResponse<>(allHostRequests);
     }
