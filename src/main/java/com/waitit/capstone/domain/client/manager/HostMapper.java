@@ -12,6 +12,4 @@ public interface HostMapper {
     HostResponse hostToDto(Host host);
 
     Host toEntity(HostRequest request);
-
-    AllHostRequest toAllHostRequest(Host host);
 }
