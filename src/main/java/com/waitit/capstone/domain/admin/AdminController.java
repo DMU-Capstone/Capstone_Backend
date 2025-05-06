@@ -64,4 +64,5 @@ public class AdminController {
     //이벤트 배너 등록
 
     //대기열 현황 조회
+
 }

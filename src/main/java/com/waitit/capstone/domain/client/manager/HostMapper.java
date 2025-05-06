@@ -1,6 +1,7 @@
 package com.waitit.capstone.domain.client.manager;
 
 
+import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.client.manager.dto.HostRequest;
 import com.waitit.capstone.domain.client.manager.dto.HostResponse;
 import org.mapstruct.Mapper;
@@ -11,4 +12,6 @@ public interface HostMapper {
     HostResponse hostToDto(Host host);
 
     Host toEntity(HostRequest request);
+
+    AllHostRequest toAllHostRequest(Host host);
 }
