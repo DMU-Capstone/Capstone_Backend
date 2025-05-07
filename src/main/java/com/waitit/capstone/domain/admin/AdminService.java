@@ -4,11 +4,11 @@ import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 
-import com.waitit.capstone.domain.client.manager.Host;
-import com.waitit.capstone.domain.client.manager.HostMapper;
-import com.waitit.capstone.domain.client.manager.HostRepository;
-import com.waitit.capstone.domain.client.member.Entity.Member;
-import com.waitit.capstone.domain.client.member.MemberRepository;
+import com.waitit.capstone.domain.manager.Host;
+import com.waitit.capstone.domain.manager.HostMapper;
+import com.waitit.capstone.domain.manager.HostRepository;
+import com.waitit.capstone.domain.member.Entity.Member;
+import com.waitit.capstone.domain.member.MemberRepository;
 import com.waitit.capstone.global.util.PageResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;

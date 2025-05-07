@@ -1,6 +1,6 @@
 package com.waitit.capstone.global.security.jwt;
 
-import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
+import com.waitit.capstone.domain.auth.service.RefreshTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

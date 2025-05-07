@@ -1,8 +1,8 @@
 package com.waitit.capstone.global.security.jwt;
 
-import com.waitit.capstone.domain.client.auth.dto.CustomUserDetails;
-import com.waitit.capstone.domain.client.member.Entity.Member;
-import com.waitit.capstone.domain.client.member.Entity.Role;
+import com.waitit.capstone.domain.auth.dto.CustomUserDetails;
+import com.waitit.capstone.domain.member.Entity.Member;
+import com.waitit.capstone.domain.member.Entity.Role;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

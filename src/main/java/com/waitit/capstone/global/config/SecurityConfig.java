@@ -1,13 +1,11 @@
 package com.waitit.capstone.global.config;
 
-import com.waitit.capstone.domain.client.auth.service.RefreshTokenService;
+import com.waitit.capstone.domain.auth.service.RefreshTokenService;
 import com.waitit.capstone.global.security.jwt.CustomLogoutFilter;
 import com.waitit.capstone.global.security.jwt.JWTFilter;
 import com.waitit.capstone.global.security.jwt.JWTUtil;
 import com.waitit.capstone.global.security.jwt.LoginFilter;
 import com.waitit.capstone.global.security.jwt.RefreshTokenResolver;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
