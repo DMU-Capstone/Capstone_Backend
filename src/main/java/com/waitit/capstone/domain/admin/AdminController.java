@@ -63,10 +63,12 @@ public class AdminController {
     }
 
     //이벤트 배너 등록
+    //이벤트 배너 조회
+
 
     //대기열 현황 조회
 
-    //모든 회원 조회
+    //모든 호스트 조회
     @GetMapping("/hosts")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PageResponse<AllHostRequest>> getAllHost(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
