@@ -1,4 +1,4 @@
-package com.waitit.capstone.domain.message;
+package com.waitit.capstone.domain.message.dto;
 
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
