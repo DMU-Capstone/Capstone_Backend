@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,4 +25,8 @@ public class EventImage {
     private LocalDateTime createdAt;
 
 
+    public EventImage(String dbFilePath) {
+        this.imgPath = dbFilePath;
+        this.createdAt = LocalDateTime.now(); // 명시적으로 설정해야 함
+    }
 }
