@@ -5,21 +5,25 @@ import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 import com.waitit.capstone.global.util.PageResponse;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @AllArgsConstructor
@@ -63,8 +67,14 @@ public class AdminController {
     }
 
     //이벤트 배너 등록
+    @PostMapping("/event")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> uploadEventBanner(@RequestParam("images") List<MultipartFile> eventImages){
+        adminService.uploadEventImage(eventImages);
+        return ResponseEntity.status(HttpStatus.CREATED).body("이미지 저장 완료");
+    }
     //이벤트 배너 조회
-
+    
 
     //대기열 현황 조회
 
