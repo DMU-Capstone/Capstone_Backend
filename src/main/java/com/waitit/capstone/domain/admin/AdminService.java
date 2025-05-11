@@ -4,16 +4,19 @@ import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 
+import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.manager.Host;
 import com.waitit.capstone.domain.manager.HostMapper;
 import com.waitit.capstone.domain.manager.HostRepository;
 import com.waitit.capstone.domain.member.Entity.Member;
 import com.waitit.capstone.domain.member.MemberRepository;
 import com.waitit.capstone.global.util.PageResponse;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @AllArgsConstructor
@@ -24,6 +27,7 @@ public class AdminService {
     private final AdminMapper adminMapper;
     private final HostRepository hostRepository;
     private final HostMapper hostMapper;
+    private final ImageService imageService;
     //모든 유저를 조회후 페이징
     public PageResponse<AllUserRequest> getAllUser(Pageable pageable) {
         Page<Member> members = memberRepository.findAll(pageable);
@@ -47,7 +51,9 @@ public class AdminService {
     }
 
     //이벤트 배너 등록
-    //이벤트 배너 조회
+    public void uploadEventImage(List<MultipartFile> images){
+        imageService.uploadEvent(images);
+    }
 
     //모든 대기열 내역 조회
     public PageResponse<AllHostRequest> getAllHost(Pageable pageable){
@@ -56,4 +62,6 @@ public class AdminService {
 
         return new PageResponse<>(allHostRequests);
     }
+
+
 }
