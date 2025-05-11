@@ -74,7 +74,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body("이미지 저장 완료");
     }
     //이벤트 배너 조회
-    
+
 
     //대기열 현황 조회
 

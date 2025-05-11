@@ -1,5 +1,6 @@
 package com.waitit.capstone.domain.image;
 
+import com.waitit.capstone.global.util.PageResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,6 +8,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 public class ImageService {
     private final EventImageRepository eventImageRepository;
-
+    private final ImageMapper imageMapper;
     public void uploadEvent(List<MultipartFile> images){
         try{
             //이미지 파일 저장을 위한 경로 설정
@@ -48,4 +51,9 @@ public class ImageService {
         return dbFilePath;
     }
 
+    public PageResponse<AllImageResponse> getAllImage(Pageable pageable){
+        Page<EventImage> eventImages = eventImageRepository.findAll(pageable);
+        Page<AllImageResponse> page = eventImages.map(imageMapper::toAllImageResponse);
+        return new PageResponse<>(page);
+    }
 }
