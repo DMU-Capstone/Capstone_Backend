@@ -69,14 +69,14 @@ public class AdminController {
     }
 
     //이벤트 배너 등록
-    @PostMapping("/event")
+    @PostMapping("/event/upload")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> uploadEventBanner(@RequestParam("images") List<MultipartFile> eventImages){
         adminService.uploadEventImage(eventImages);
         return ResponseEntity.status(HttpStatus.CREATED).body("이미지 저장 완료");
     }
     //이벤트 배너 조회
-    @GetMapping
+    @GetMapping("/event")
     public ResponseEntity<PageResponse<AllImageResponse>> getAllImages(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -84,6 +84,14 @@ public class AdminController {
         PageResponse<AllImageResponse> images = imageService.getAllImage(pageable);
         return ResponseEntity.ok(images);
     }
+    //메인 이벤트 배너 결정 기능
+    @PostMapping("/event/select")
+    public ResponseEntity<?> selectEventBanner(@RequestParam Long imgId,@RequestParam int number){
+        adminService.selectBanner(imgId,number);
+        return ResponseEntity.status(HttpStatus.OK).body("이미지 이벤트 등록 완료");
+    }
+
+    //메인 이벤트배너 조회
 
     //대기열 현황 조회
 

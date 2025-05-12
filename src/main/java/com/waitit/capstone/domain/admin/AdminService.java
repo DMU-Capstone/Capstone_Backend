@@ -26,7 +26,6 @@ public class AdminService {
     private final MemberRepository memberRepository;
     private final AdminMapper adminMapper;
     private final HostRepository hostRepository;
-    private final HostMapper hostMapper;
     private final ImageService imageService;
     //모든 유저를 조회후 페이징
     public PageResponse<AllUserRequest> getAllUser(Pageable pageable) {
@@ -64,4 +63,10 @@ public class AdminService {
     }
 
 
+    public void selectBanner(Long imgId, int number) {
+        //레디스에 imgId 받은걸 db 패스를 찾음
+        String img = imageService.getImgPath(imgId);
+        // 레디스 리스트의  number 인덱스에 등록
+
+    }
 }

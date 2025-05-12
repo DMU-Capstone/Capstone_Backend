@@ -56,4 +56,8 @@ public class ImageService {
         Page<AllImageResponse> page = eventImages.map(imageMapper::toAllImageResponse);
         return new PageResponse<>(page);
     }
+    public String getImgPath(Long id){
+      EventImage eventImage =  eventImageRepository.findById(id).orElseThrow(()->new IllegalArgumentException("없는 이미지 입니다."));
+      return eventImage.getImgPath();
+    }
 }
