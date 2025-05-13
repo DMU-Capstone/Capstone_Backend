@@ -2,6 +2,7 @@ package com.waitit.capstone.domain.admin;
 
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
+import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 import com.waitit.capstone.domain.image.AllImageResponse;
 import com.waitit.capstone.domain.image.ImageService;
@@ -75,6 +76,7 @@ public class AdminController {
         adminService.uploadEventImage(eventImages);
         return ResponseEntity.status(HttpStatus.CREATED).body("이미지 저장 완료");
     }
+
     //이벤트 배너 조회
     @GetMapping("/event")
     public ResponseEntity<PageResponse<AllImageResponse>> getAllImages(
@@ -92,6 +94,11 @@ public class AdminController {
     }
 
     //메인 이벤트배너 조회
+    @GetMapping("/event/select")
+    public ResponseEntity<MainBannerResponse> getAllBanner(){
+        MainBannerResponse responseList = adminService.getEventBanner();
+        return ResponseEntity.ok(responseList);
+    }
 
     //대기열 현황 조회
 

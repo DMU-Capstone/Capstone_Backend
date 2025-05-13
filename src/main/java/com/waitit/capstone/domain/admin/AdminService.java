@@ -1,7 +1,9 @@
 package com.waitit.capstone.domain.admin;
 
+import com.sun.tools.javac.Main;
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
+import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 
 import com.waitit.capstone.domain.image.ImageService;
@@ -38,7 +40,7 @@ public class AdminService {
         return new PageResponse<>(allUserRequests);
     }
 
-    //유저 리퀘스트 바디를 받아서 수정후 저장
+    //유저 리퀘스트 바디를 받아서 멤버 수정후 저장
     public void updateMember(UpdatedRequest request) {
         Long memberId = Long.parseLong(request.getId());
         Member member = memberRepository.findMemberById(memberId);
@@ -47,30 +49,36 @@ public class AdminService {
         memberRepository.save(member);
     }
 
-    //아이디로 삭제
+    //아이디로 멤버삭제
     public void deleteMember(Long id) {
         memberRepository.deleteById(id);
     }
 
     //이벤트 배너 등록
-    public void uploadEventImage(List<MultipartFile> images){
+    public void uploadEventImage(List<MultipartFile> images) {
         imageService.uploadEvent(images);
     }
 
-    //모든 대기열 내역 조회
-    public PageResponse<AllHostRequest> getAllHost(Pageable pageable){
-        Page<Host> hosts = hostRepository.findAll(pageable);
-        Page<AllHostRequest> allHostRequests = hosts.map(adminMapper::toAllHostRequest);
-
-        return new PageResponse<>(allHostRequests);
-    }
-
-
+    //이벤트 배너 메인 등록
     public void selectBanner(Long imgId, int number) {
         //레디스에 imgId 받은걸 db 패스를 찾음
         String img = imageService.getImgPath(imgId);
         String redisKey = "selected_banners";
         // 레디스 리스트의  number 인덱스에 등록
         redisTemplate.opsForList().set(redisKey, number, img);
+    }
+
+    //모든 대기열 내역 조회
+    public PageResponse<AllHostRequest> getAllHost(Pageable pageable) {
+        Page<Host> hosts = hostRepository.findAll(pageable);
+        Page<AllHostRequest> allHostRequests = hosts.map(adminMapper::toAllHostRequest);
+
+        return new PageResponse<>(allHostRequests);
+    }
+
+    public MainBannerResponse getEventBanner() {
+        String redisKey = "selected_banners";
+        List<String> list = redisTemplate.opsForList().range(redisKey, 0, 4);
+        return new MainBannerResponse("mainBanner", list);
     }
 }
