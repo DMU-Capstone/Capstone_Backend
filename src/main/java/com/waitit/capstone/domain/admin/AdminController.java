@@ -87,6 +87,7 @@ public class AdminController {
         return ResponseEntity.ok(images);
     }
     //메인 이벤트 배너 결정 기능
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/event/select")
     public ResponseEntity<?> selectEventBanner(@RequestParam Long imgId,@RequestParam int number){
         adminService.selectBanner(imgId,number);
@@ -94,6 +95,7 @@ public class AdminController {
     }
 
     //메인 이벤트배너 조회
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/event/select")
     public ResponseEntity<MainBannerResponse> getAllBanner(){
         MainBannerResponse responseList = adminService.getEventBanner();

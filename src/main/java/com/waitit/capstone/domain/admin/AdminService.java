@@ -63,7 +63,7 @@ public class AdminService {
     public void selectBanner(Long imgId, int number) {
         //레디스에 imgId 받은걸 db 패스를 찾음
         String img = imageService.getImgPath(imgId);
-        String redisKey = "selected_banners";
+        String redisKey = "main_banner";
         // 레디스 리스트의  number 인덱스에 등록
         redisTemplate.opsForList().set(redisKey, number, img);
     }
@@ -77,7 +77,7 @@ public class AdminService {
     }
 
     public MainBannerResponse getEventBanner() {
-        String redisKey = "selected_banners";
+        String redisKey = "main_banner";
         List<String> list = redisTemplate.opsForList().range(redisKey, 0, 4);
         return new MainBannerResponse("mainBanner", list);
     }
