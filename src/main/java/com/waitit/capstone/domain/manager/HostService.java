@@ -1,5 +1,6 @@
 package com.waitit.capstone.domain.manager;
 
+import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
@@ -20,7 +21,7 @@ public class HostService {
     private final StringRedisTemplate redisTemplate;
     private final HostMapper hostMapper;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
-
+    private final ImageService imageService;
     public boolean hostExist(Long id) {
         return true;
     }
