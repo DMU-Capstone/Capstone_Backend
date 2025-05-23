@@ -55,7 +55,8 @@ dependencies {
     implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient:3.63.3'
     implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-choices:3.63.3'
     implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3:3.63.3'
-
+    //swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
     //sms 인증 서비스 coolsms
     implementation 'net.nurigo:sdk:4.3.2'
 

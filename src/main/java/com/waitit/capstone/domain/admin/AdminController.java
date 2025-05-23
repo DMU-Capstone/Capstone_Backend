@@ -60,6 +60,7 @@ public class AdminController {
     //회원 삭제
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<?> deleteUser(@PathVariable Long id){
         adminService.deleteMember(id);
 

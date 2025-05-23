@@ -18,19 +18,4 @@ public class HostRequest {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    public Host toEntity() {
-        return Host.builder()
-                .imgUrl(imgUrl)
-                .hostName(hostName)
-                .maxPeople(maxPeople)
-                .hostManagerName(hostManagerName)
-                .hostPhoneNumber(hostPhoneNumber)
-                .latitude(latitude)
-                .longitude(longitude)
-                .keyword(keyword)
-                .description(description)
-                .startTime(startTime)
-                .endTime(endTime)
-                .build();
-    }
 }
