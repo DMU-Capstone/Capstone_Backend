@@ -1,10 +1,15 @@
 package com.waitit.capstone.domain.manager;
 
+import com.waitit.capstone.domain.image.entity.HostImage;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +25,12 @@ public class Host {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String imgUrl;
+    @OneToMany(
+            mappedBy = "host",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<HostImage> images = new ArrayList<>();
 
     private String hostName;
 
@@ -39,4 +49,13 @@ public class Host {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+
+    public void addImage(HostImage img) {
+        images.add(img);
+        img.setHost(this);
+    }
+    public void removeImage(HostImage img) {
+        images.remove(img);
+        img.setHost(null);
+    }
 }

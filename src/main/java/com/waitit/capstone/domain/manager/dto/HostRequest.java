@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 public class HostRequest {
-    private String imgUrl;
     private String hostName;
     private Integer maxPeople;
     private String hostManagerName;
