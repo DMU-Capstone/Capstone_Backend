@@ -3,6 +3,7 @@ package com.waitit.capstone.domain.manager.dto;
 import java.time.LocalDateTime;
 
 public record HostResponse(
+        Long id,
         String imgUrl,
         String hostName,
         Integer maxPeople,

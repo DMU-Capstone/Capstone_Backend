@@ -6,7 +6,6 @@ import lombok.Getter;
 
 @Getter
 public class HostRequest {
-    private String imgUrl;
     private String hostName;
     private Integer maxPeople;
     private String hostManagerName;
@@ -18,19 +17,4 @@ public class HostRequest {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
-    public Host toEntity() {
-        return Host.builder()
-                .imgUrl(imgUrl)
-                .hostName(hostName)
-                .maxPeople(maxPeople)
-                .hostManagerName(hostManagerName)
-                .hostPhoneNumber(hostPhoneNumber)
-                .latitude(latitude)
-                .longitude(longitude)
-                .keyword(keyword)
-                .description(description)
-                .startTime(startTime)
-                .endTime(endTime)
-                .build();
-    }
 }
