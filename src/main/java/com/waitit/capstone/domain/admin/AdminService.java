@@ -11,8 +11,11 @@ import com.waitit.capstone.domain.manager.Host;
 import com.waitit.capstone.domain.manager.HostRepository;
 import com.waitit.capstone.domain.member.Entity.Member;
 import com.waitit.capstone.domain.member.MemberRepository;
+import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.global.util.PageResponse;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -80,5 +83,15 @@ public class AdminService {
         String redisKey = "main_banner";
         List<String> list = redisTemplate.opsForList().range(redisKey, 0, 4);
         return new MainBannerResponse("mainBanner", list);
+    }
+    //현재 대기열 목록 조회
+    public Set<String> getActiveHostIds() {
+        return redisTemplate.opsForSet().members("active:hosts");
+    }
+
+    //각 대기열 세부 목록 조회
+    public List<String> getQueueByHostId(String hostId) {
+        String key = "waitList" + hostId;
+        return redisTemplate.opsForList().range(key, 0, -1);
     }
 }
