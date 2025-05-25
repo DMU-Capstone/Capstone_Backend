@@ -27,7 +27,7 @@ public class QueueService {
             throw new RuntimeException("QueueDto 직렬화 실패", e);
         }
         }
-    private QueueDto convertStringToDto(String json) {
+    public QueueDto convertStringToDto(String json) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(json, QueueDto.class);

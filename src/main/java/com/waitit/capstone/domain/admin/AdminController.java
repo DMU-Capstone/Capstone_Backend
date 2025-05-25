@@ -2,14 +2,17 @@ package com.waitit.capstone.domain.admin;
 
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
+import com.waitit.capstone.domain.admin.dto.HostSummaryDto;
 import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 import com.waitit.capstone.domain.image.AllImageResponse;
 import com.waitit.capstone.domain.image.ImageService;
+import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.global.util.PageResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -104,10 +107,22 @@ public class AdminController {
     }
 
     //대기열 현황 조회
-
-    //모든 호스트 조회
-    @GetMapping("/hosts")
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/active")
+    public ResponseEntity<?> getAllQueue(){
+        List<HostSummaryDto> list = adminService.getActiveHostSummaries();
+        return ResponseEntity.ok(list);
+    }
+    //세부 대기열 내역 조회
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/active/{hostId}")
+    public ResponseEntity<?> findQueueByHostId(@PathVariable String hostId){
+        List<QueueDto> list = adminService.getQueueDtoByHostId(hostId);
+        return ResponseEntity.ok(list);
+    }
+    //모든 호스트 조회
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/hosts")
     public ResponseEntity<PageResponse<AllHostRequest>> getAllHost(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("id").descending());
         PageResponse<AllHostRequest> response = adminService.getAllHost(pageable);

@@ -30,6 +30,7 @@ public class Host {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @Builder.Default
     private List<HostImage> images = new ArrayList<>();
 
     private String hostName;

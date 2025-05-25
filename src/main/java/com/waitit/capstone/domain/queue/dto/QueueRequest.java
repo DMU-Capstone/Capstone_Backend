@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class QueueRequest {
-    private String PhoneNumber;
+    private String phoneNumber;
     private String name;
     private int count;
 }

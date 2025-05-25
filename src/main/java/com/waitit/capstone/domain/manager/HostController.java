@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,9 +27,10 @@ public class HostController {
     private final HostService hostService;
 
     @PostMapping
-    public ResponseEntity<?> saveHost(@RequestBody HostRequest request,List<MultipartFile> hostImages)
-            throws IOException {
-
+    public ResponseEntity<?> saveHost (
+            @RequestPart("request") HostRequest request,
+            @RequestPart(value = "hostImages", required = false) List<MultipartFile> hostImages
+) throws IOException  {
         hostService.saveHost(request,hostImages);
 
         //추후 공통 응답바디로 변경

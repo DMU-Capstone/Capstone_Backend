@@ -1,8 +1,8 @@
 package com.waitit.capstone.domain.admin;
 
-import com.sun.tools.javac.Main;
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
+import com.waitit.capstone.domain.admin.dto.HostSummaryDto;
 import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 
@@ -11,10 +11,12 @@ import com.waitit.capstone.domain.manager.Host;
 import com.waitit.capstone.domain.manager.HostRepository;
 import com.waitit.capstone.domain.member.Entity.Member;
 import com.waitit.capstone.domain.member.MemberRepository;
+import com.waitit.capstone.domain.queue.QueueService;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.global.util.PageResponse;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,7 @@ public class AdminService {
     private final AdminMapper adminMapper;
     private final HostRepository hostRepository;
     private final ImageService imageService;
+    private final QueueService queueService;
     private final StringRedisTemplate redisTemplate;
 
 
@@ -85,13 +88,37 @@ public class AdminService {
         return new MainBannerResponse("mainBanner", list);
     }
     //현재 대기열 목록 조회
-    public Set<String> getActiveHostIds() {
-        return redisTemplate.opsForSet().members("active:hosts");
-    }
+    public List<HostSummaryDto> getActiveHostSummaries() {
+        Set<String> ids = redisTemplate.opsForSet().members("active:hosts");
 
+        return ids.stream()
+                .map(Long::parseLong)
+                .map(hostRepository::findById)
+                .filter(Optional::isPresent)
+                .map(opt -> {
+                    Host host = opt.get();
+                    return new HostSummaryDto(host.getId(), host.getHostName(), host.getImages().get(0));
+                })
+                .toList();
+    }
     //각 대기열 세부 목록 조회
-    public List<String> getQueueByHostId(String hostId) {
+    public List<QueueDto> getQueueDtoByHostId(String hostId) {
         String key = "waitList" + hostId;
-        return redisTemplate.opsForList().range(key, 0, -1);
+        List<String> rawList = redisTemplate.opsForList().range(key, 0, -1);
+
+        if (rawList == null) return List.of();
+
+        return rawList.stream()
+                .filter(s -> s != null && s.trim().startsWith("{")) // JSON 객체만
+                .map(s -> {
+                    try {
+                        return queueService.convertStringToDto(s);
+                    } catch (RuntimeException e) {
+                        System.err.println("[QueueDto 역직렬화 실패] 값: " + s);
+                        return null; // 실패한 값은 무시
+                    }
+                })
+                .filter(Objects::nonNull) // null 제거
+                .toList();
     }
 }

@@ -1,5 +1,6 @@
 package com.waitit.capstone.domain.image.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.waitit.capstone.domain.manager.Host;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +34,7 @@ public class HostImage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "host_id", nullable = false)
+    @JsonIgnore
     private Host host;
 
     // 실제로 생성자를 private으로 선언
