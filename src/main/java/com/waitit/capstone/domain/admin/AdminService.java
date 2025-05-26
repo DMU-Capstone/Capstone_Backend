@@ -97,7 +97,11 @@ public class AdminService {
                 .filter(Optional::isPresent)
                 .map(opt -> {
                     Host host = opt.get();
-                    return new HostSummaryDto(host.getId(), host.getHostName(), host.getImages().get(0));
+                    return new HostSummaryDto(
+                            host.getId(),
+                            host.getHostName(),
+                            host.getImages().stream().findFirst().orElse(null)
+                    );
                 })
                 .toList();
     }
