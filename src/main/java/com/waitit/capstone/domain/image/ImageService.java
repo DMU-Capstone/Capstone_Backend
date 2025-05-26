@@ -32,8 +32,7 @@ public class ImageService {
     public void uploadEvent(List<MultipartFile> images){
         try{
             //이미지 파일 저장을 위한 경로 설정
-            String uploadDir = "src/main/resources/static/uploads/events/";
-
+            String uploadDir = "/home/ubuntu/app/uploads/events/";
             //각 이미지 파일에 대해 업로드 및 db 저장 수행
             for(MultipartFile image : images){
                 String dbFilePath = saveImage(image,uploadDir,"events");
@@ -49,7 +48,7 @@ public class ImageService {
     public HostImage uploadHost(Long id, MultipartFile image) throws IOException{
         Host host = hostRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Host not found: " + id));
-        String uploadDir = "src/main/resources/static/uploads/hosts/";
+        String uploadDir = "/home/ubuntu/app/uploads/hosts/";
         // 1) 파일 저장
         String dbFilePath = saveImage(image, uploadDir, "hosts");
 
@@ -62,11 +61,9 @@ public class ImageService {
 
     private String saveImage(MultipartFile image, String uploadDir,String dir) throws IOException {
         //파일 이름 생성
-        String fileName = UUID.randomUUID().toString().replace("-","")+"_"+image.getOriginalFilename();
-        //실제 파일이 저장될 경로
+        String fileName = UUID.randomUUID().toString().replace("-", "") + "_" + image.getOriginalFilename();
         String filePath = uploadDir + fileName;
-        //db에 저장할 경로 문자열
-        String dbFilePath = "/uploads/"+dir+"/" + fileName;
+        String dbFilePath = "/uploads/" + dir + "/" + fileName;
 
         Path path = Paths.get(filePath);
         Files.createDirectories(path.getParent());
