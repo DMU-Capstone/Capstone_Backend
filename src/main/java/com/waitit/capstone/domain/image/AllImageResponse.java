@@ -10,6 +10,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AllImageResponse {
     private Long id;
-    private String dbFilePath;
+    private String imgPath;
     private LocalDateTime createdAt;
 }
