@@ -63,17 +63,21 @@ public class ImageService {
         return img;
     }
 
-    private String saveImage(MultipartFile image, String uploadDir,String dir) throws IOException {
-        //파일 이름 생성
+    private String saveImage(MultipartFile image, String uploadDir, String dir) throws IOException {
+        // 1) 파일이름
         String fileName = UUID.randomUUID().toString().replace("-", "") + "_" + image.getOriginalFilename();
-        String filePath = uploadDir + fileName;
-        String dbFilePath = "/app/uploads/" + dir + "/" + fileName;
 
-        Path path = Paths.get(filePath);
-        Files.createDirectories(path.getParent());
-        Files.write(path,image.getBytes());
+        // 2) 폴더 경로 (uploadDir/dir)
+        Path folderPath = Paths.get(uploadDir, dir);
+        Files.createDirectories(folderPath);
 
-        return dbFilePath;
+        // 3) 실제 저장될 경로 (uploadDir/dir/파일명)
+        Path filePath = folderPath.resolve(fileName);
+        // 또는 Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        Files.write(filePath, image.getBytes());
+
+        // 4) DB에 저장할 경로 (웹에서 접근할 URL 경로)
+        return "/app/uploads/" + dir + "/" + fileName;
     }
 
     public PageResponse<AllImageResponse> getAllImage(Pageable pageable){
