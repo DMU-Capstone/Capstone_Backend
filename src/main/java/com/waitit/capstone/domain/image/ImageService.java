@@ -31,18 +31,22 @@ public class ImageService {
     private final ImageMapper imageMapper;
     public void uploadEvent(List<MultipartFile> images){
         try{
-            //이미지 파일 저장을 위한 경로 설정
             String uploadDir = "/home/ubuntu/app/uploads/events/";
-            //각 이미지 파일에 대해 업로드 및 db 저장 수행
             for(MultipartFile image : images){
-                String dbFilePath = saveImage(image,uploadDir,"events");
+                if (image.isEmpty()) {
+                    System.err.println("[경고] 업로드된 이미지가 비어 있음: " + image.getOriginalFilename());
+                    continue;
+                }
+
+                String dbFilePath = saveImage(image, uploadDir, "events");
                 EventImage eventImage = new EventImage(dbFilePath);
                 eventImageRepository.save(eventImage);
+                System.out.println("[성공] 저장됨: " + dbFilePath);
             }
 
-        }catch (IOException e) {
-            // 파일 저장 중 오류가 발생한 경우 처리
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("[오류] 이미지 저장 실패: " + e.getMessage());
+            throw new RuntimeException("이미지 저장 실패", e);
         }
     }
     public HostImage uploadHost(Long id, MultipartFile image) throws IOException{
@@ -63,7 +67,7 @@ public class ImageService {
         //파일 이름 생성
         String fileName = UUID.randomUUID().toString().replace("-", "") + "_" + image.getOriginalFilename();
         String filePath = uploadDir + fileName;
-        String dbFilePath = "/uploads/" + dir + "/" + fileName;
+        String dbFilePath = "/app/uploads/" + dir + "/" + fileName;
 
         Path path = Paths.get(filePath);
         Files.createDirectories(path.getParent());
