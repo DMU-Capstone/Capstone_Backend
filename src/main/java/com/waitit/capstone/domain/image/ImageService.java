@@ -31,7 +31,7 @@ public class ImageService {
     private final ImageMapper imageMapper;
     public void uploadEvent(List<MultipartFile> images){
         try{
-            String uploadDir = "/home/ubuntu/app/uploads/events/";
+            String uploadDir = "/home/ubuntu/app/uploads";
             for(MultipartFile image : images){
                 if (image.isEmpty()) {
                     System.err.println("[경고] 업로드된 이미지가 비어 있음: " + image.getOriginalFilename());
@@ -52,7 +52,7 @@ public class ImageService {
     public HostImage uploadHost(Long id, MultipartFile image) throws IOException{
         Host host = hostRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Host not found: " + id));
-        String uploadDir = "/home/ubuntu/app/uploads/hosts/";
+        String uploadDir = "/home/ubuntu/app/uploads";
         // 1) 파일 저장
         String dbFilePath = saveImage(image, uploadDir, "hosts");
 
@@ -64,20 +64,23 @@ public class ImageService {
     }
 
     private String saveImage(MultipartFile image, String uploadDir, String dir) throws IOException {
-        // 1) 파일이름
-        String fileName = UUID.randomUUID().toString().replace("-", "") + "_" + image.getOriginalFilename();
+        // 1) UUID 파일명
+        String fileName = UUID.randomUUID().toString().replace("-", "")
+                + "_" + image.getOriginalFilename();
 
-        // 2) 폴더 경로 (uploadDir/dir)
+        // 2) 업로드 루트 + 카테고리 폴더 생성
         Path folderPath = Paths.get(uploadDir, dir);
         Files.createDirectories(folderPath);
 
-        // 3) 실제 저장될 경로 (uploadDir/dir/파일명)
+        // 3) 실제 파일 저장
         Path filePath = folderPath.resolve(fileName);
-        // 또는 Files.copy(image.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         Files.write(filePath, image.getBytes());
 
-        // 4) DB에 저장할 경로 (웹에서 접근할 URL 경로)
-        return "/app/uploads/" + dir + "/" + fileName;
+        System.out.println("[DEBUG] filePath = " + filePath.toAbsolutePath());
+        System.out.println("[DEBUG] exists? " + Files.exists(filePath));
+
+        // 4) 클라이언트에 돌려줄 URL 경로 (/uploads/** 패턴에 맞춰)
+        return "/uploads/" + dir + "/" + fileName;
     }
 
     public PageResponse<AllImageResponse> getAllImage(Pageable pageable){
