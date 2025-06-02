@@ -30,9 +30,6 @@ public class HostService {
     private final HostMapper hostMapper;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     private final ImageService imageService;
-    public boolean hostExist(Long id) {
-        return true;
-    }
 
     //호스트 정보 저장
     public void saveHost(HostRequest request,List<MultipartFile> hostImages) throws IOException {

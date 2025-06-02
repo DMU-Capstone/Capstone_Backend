@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -26,6 +30,12 @@ public class QueueController {
     private final QueueService queueService;
     private final QueueMapper queueMapper;
     private final Map<Long, List<DeferredResult<ResponseEntity<Integer>>>> waiters = new ConcurrentHashMap<>();
+
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    // 최대 대기 시간 (ms)
+    private static final long TIMEOUT = 30_000L;   // 30초
+    private static final long POLL_INTERVAL = 1_000L; // 1초
+
     //대기열 등록
     @PostMapping("/{id}")
     public ResponseEntity<?> registerQueue(@PathVariable Long id, @RequestBody QueueRequest queueRequest){
@@ -36,13 +46,34 @@ public class QueueController {
     }
     //내 대기열 순번 확인
     @GetMapping("/{id}/position/")
-    public ResponseEntity<?> getMyPosition(
+    public DeferredResult<ResponseEntity<QueResponseDto>> getMyPosition(
             @PathVariable Long id,
-            @RequestBody QueueRequest queueRequest) {
+            @RequestBody QueueRequest queueRequest,
+            @RequestParam(name = "lastPos", required = false) Integer lastPos) {
         QueueDto dto = queueMapper.requestToDto(queueRequest);
-        int index =  queueService.getMyPosition(id,dto);
-        QueResponseDto responseDto = new QueResponseDto("현재 내 대기열 순번은",index);
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        int      initialPos = queueService.getMyPosition(id, dto);
+        int      clientLast = (lastPos != null ? lastPos : initialPos);
+
+        DeferredResult<ResponseEntity<QueResponseDto>> result = new DeferredResult<>(TIMEOUT);
+
+        /* ① 타임아웃 시 기본 응답 */
+        result.onTimeout(() -> {
+            QueResponseDto body = new QueResponseDto("변동 없음(타임아웃)", clientLast);
+            result.setResult(ResponseEntity.ok(body));
+        });
+
+        /* ② 1초마다 순번 변동 체크 */
+        scheduler.scheduleAtFixedRate(() -> {
+            if (result.isSetOrExpired()) return;   // 이미 응답했으면 skip
+
+            int current = queueService.getMyPosition(id, dto);
+            if (current != clientLast) {           // 순번 변동!
+                QueResponseDto body = new QueResponseDto("순번 변경!", current);
+                result.setResult(ResponseEntity.ok(body));
+            }
+        }, 0, POLL_INTERVAL, TimeUnit.MILLISECONDS);
+
+        return result;
     }
 
     //대기열 입장 취소

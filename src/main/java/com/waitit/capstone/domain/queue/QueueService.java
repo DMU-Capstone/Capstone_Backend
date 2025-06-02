@@ -2,7 +2,6 @@ package com.waitit.capstone.domain.queue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.waitit.capstone.domain.manager.HostService;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -60,6 +59,7 @@ public class QueueService {
                 // Redis 7.0 이상에서 지원하는 LPOS
                 conn.lPos(rawKey, rawMember)
         );
+
 
         // null이면 리스트에 없음
         return pos != null ? pos.intValue() : -1;
