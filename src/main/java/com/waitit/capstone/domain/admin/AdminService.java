@@ -7,6 +7,7 @@ import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 
 import com.waitit.capstone.domain.image.ImageService;
+import com.waitit.capstone.domain.image.repository.EventImageRepository;
 import com.waitit.capstone.domain.manager.Host;
 import com.waitit.capstone.domain.manager.HostRepository;
 import com.waitit.capstone.domain.member.Entity.Member;
@@ -36,6 +37,7 @@ public class AdminService {
     private final ImageService imageService;
     private final QueueService queueService;
     private final StringRedisTemplate redisTemplate;
+    private final EventImageRepository eventImageRepository;
 
 
     //모든 유저를 조회후 페이징
@@ -124,5 +126,9 @@ public class AdminService {
                 })
                 .filter(Objects::nonNull) // null 제거
                 .toList();
+    }
+
+    public void deleteImage(Long id) {
+        eventImageRepository.deleteById(id);
     }
 }

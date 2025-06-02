@@ -91,6 +91,13 @@ public class AdminController {
         PageResponse<AllImageResponse> images = imageService.getAllImage(pageable);
         return ResponseEntity.ok(images);
     }
+    //이벤트 배너 삭제
+    @DeleteMapping("/event/{id}")
+    public ResponseEntity<?> deleteEvent(@PathVariable Long id){
+        adminService.deleteImage(id);
+        return ResponseEntity.status(HttpStatus.OK).body("이미지 삭제 완료");
+    }
+
     //메인 이벤트 배너 결정 기능
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/event/select")
@@ -107,6 +114,7 @@ public class AdminController {
         return ResponseEntity.ok(responseList);
     }
 
+
     //대기열 현황 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/active")
@@ -121,6 +129,7 @@ public class AdminController {
         List<QueueDto> list = adminService.getQueueDtoByHostId(hostId);
         return ResponseEntity.ok(list);
     }
+
     //모든 호스트 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/hosts")
