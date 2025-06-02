@@ -1,10 +1,14 @@
 package com.waitit.capstone.domain.manager;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.image.entity.HostImage;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
+import com.waitit.capstone.domain.manager.dto.WaitingListDto;
+import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -104,18 +108,27 @@ public class HostService {
 
     // 예상 시간 계산 메소드
     private String calculateEstimatedTime(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime == null || endTime == null) {
-            return "미정";
-        }
+        return null;
+    }
+    //웨이팅 리스트 조회
+    public List<WaitingListDto> getQueueListByHostId(Long hostId) {
+        String key = "waitList" + hostId;
+        List<String> rawList = redisTemplate.opsForList().range(key, 0, -1);
 
-        Duration duration = Duration.between(startTime, endTime);
-        long hours = duration.toHours();
-        long minutes = duration.toMinutesPart();
+        if (rawList == null) return List.of(); // null 방지
 
-        if (hours > 0) {
-            return hours + "시간 " + (minutes > 0 ? minutes + "분" : "");
-        } else {
-            return minutes + "분";
+        List<QueueDto> list = rawList.stream()
+                .map(this::convertStringToDto)
+                .toList();
+        return hostMapper.queueToWaiting(list);
+    }
+
+    public QueueDto convertStringToDto(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, QueueDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("QueueDto 역직렬화 실패", e);
         }
     }
 }

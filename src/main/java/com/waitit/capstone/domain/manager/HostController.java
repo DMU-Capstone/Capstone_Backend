@@ -3,6 +3,7 @@ package com.waitit.capstone.domain.manager;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
+import com.waitit.capstone.domain.manager.dto.WaitingListDto;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -52,5 +53,10 @@ public class HostController {
     public ResponseEntity<List<SessionListDto>> getSessionList(){
         List<SessionListDto> sessions = hostService.getAllSessions();
         return ResponseEntity.status(HttpStatus.OK).body(sessions);
+    }
+    @GetMapping("/waiting/{id}")
+    public ResponseEntity<?> getWaitingList(@PathVariable Long id){
+        List<WaitingListDto> list = hostService.getQueueListByHostId(id);
+        return ResponseEntity.ok(list);
     }
 }
