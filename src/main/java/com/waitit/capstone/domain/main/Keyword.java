@@ -15,14 +15,22 @@ import org.springframework.data.annotation.Persistent;
 @NoArgsConstructor
 public class Keyword {
 
+    public Keyword(String search_term,String user_ip) {
+        this.search_term = search_term;
+        this.user_ip = user_ip;
+    }
+
     @Id @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private LocalDateTime searchDate;
     private String search_term;
+    private String user_ip;
 
     @PrePersist
     protected void onCreate() {
         this.searchDate = LocalDateTime.now();
     }
+
+
 }
