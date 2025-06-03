@@ -10,15 +10,16 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class MainService {
-    private static final String ACTIVE_HOSTS_KEY = "active:hosts";
+
     private final HostService hostService;
 
     //검색기능
     public List<SessionListDto> findKeyword(String keyword){
+
         List<SessionListDto> list = hostService.getAllSessions();
         List<SessionListDto> results = new ArrayList<>();
         for(SessionListDto i : list){
-            if(i.hostName().equals(keyword)){
+            if(i.hostName().contains(keyword)){
                 results.add(i);
             }
         }
@@ -28,4 +29,5 @@ public class MainService {
     //트렌드 코스
 
     //핫한 키워드
+
 }
