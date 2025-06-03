@@ -3,10 +3,7 @@ package com.waitit.capstone.domain.queue;
 import com.waitit.capstone.domain.queue.dto.QueResponseDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.domain.queue.dto.QueueRequest;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +26,6 @@ import org.springframework.web.context.request.async.DeferredResult;
 public class QueueController {
     private final QueueService queueService;
     private final QueueMapper queueMapper;
-    private final Map<Long, List<DeferredResult<ResponseEntity<Integer>>>> waiters = new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     // 최대 대기 시간 (ms)
