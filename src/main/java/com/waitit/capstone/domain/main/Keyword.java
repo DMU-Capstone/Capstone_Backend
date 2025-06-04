@@ -8,7 +8,7 @@ import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Persistent;
+
 
 @Entity
 @AllArgsConstructor
