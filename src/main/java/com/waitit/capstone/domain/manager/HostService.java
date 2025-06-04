@@ -51,8 +51,7 @@ public class HostService {
 
 
         String key = "waitList" + host.getId();
-        //세션 등록
-        redisTemplate.opsForList().rightPush(key, host.getHostName());
+
         // 활성 호스트 Set 호스트 ID 추가
         redisTemplate.opsForSet().add(ACTIVE_HOSTS_KEY, host.getId().toString());
     }
