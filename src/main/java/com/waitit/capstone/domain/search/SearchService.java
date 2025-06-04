@@ -35,7 +35,5 @@ public class SearchService {
     public List<SearchTermCountDto> findTopKeyword(){
         return keywordRepository.findTopSearchTerm();
     }
-    private String calculateEstimatedTime(LocalDateTime startTime, LocalDateTime endTime) {
-        return null;
-    }
+
 }
