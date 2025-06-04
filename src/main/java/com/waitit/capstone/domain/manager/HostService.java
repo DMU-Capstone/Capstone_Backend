@@ -10,13 +10,10 @@ import com.waitit.capstone.domain.manager.dto.SessionListDto;
 import com.waitit.capstone.domain.manager.dto.WaitingListDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -54,6 +51,9 @@ public class HostService {
 
         // 활성 호스트 Set 호스트 ID 추가
         redisTemplate.opsForSet().add(ACTIVE_HOSTS_KEY, host.getId().toString());
+        //최신 정렬용 ZSet추가 CurrentTimeMills순으로 정렬
+        long timestamp = System.currentTimeMillis();
+        redisTemplate.opsForZSet().add("sorted:hosts", host.getId().toString(), timestamp);
     }
 
     // 호스트 세션 비활성화
@@ -97,10 +97,7 @@ public class HostService {
         }).toList();
     }
 
-    // 호스트가 활성 상태인지 확인
-    public boolean isHostActive(Long hostId) {
-        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ACTIVE_HOSTS_KEY, hostId.toString()));
-    }
+
 
     // 예상 시간 계산 메소드
     private String calculateEstimatedTime(LocalDateTime startTime, LocalDateTime endTime) {
