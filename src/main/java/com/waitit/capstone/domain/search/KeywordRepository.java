@@ -1,6 +1,6 @@
-package com.waitit.capstone.domain.main;
+package com.waitit.capstone.domain.search;
 
-import com.waitit.capstone.domain.main.dto.SearchTermCountDto;
+import com.waitit.capstone.domain.search.dto.SearchTermCountDto;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

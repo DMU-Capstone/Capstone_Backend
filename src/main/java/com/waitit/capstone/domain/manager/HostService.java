@@ -124,4 +124,45 @@ public class HostService {
             throw new RuntimeException("QueueDto 역직렬화 실패", e);
         }
     }
+    //트렌드 호스트
+    public List<?> findTrendHost(int count){
+        Set<String> latestHostIds = redisTemplate.opsForZSet()
+                .reverseRange("sorted:hosts", 0, count - 1); // 최신 등록 순
+
+        if (latestHostIds == null || latestHostIds.isEmpty()) return List.of();
+
+        List<Long> ids = latestHostIds.stream()
+                .map(Long::valueOf)
+                .toList();
+
+        List<Host> hosts = hostRepository.findAllById(ids);
+
+        // 정렬 보존: ZSet의 순서 → DB 결과의 순서 보장 X → 다시 정렬 필요
+        List<Host> sorted = ids.stream()
+                .map(id -> hosts.stream().filter(h -> h.getId().equals(id)).findFirst().orElse(null))
+                .filter(h -> h != null)
+                .toList();
+
+        return sorted.stream().map(host -> {
+            String imgUrl = host.getImages().stream()
+                    .findFirst()
+                    .map(HostImage::getImgPath)
+                    .orElse(null);
+
+            int waiting = Optional.ofNullable(redisTemplate.opsForList()
+                            .size("waitList" + host.getId()))
+                    .map(Long::intValue)
+                    .orElse(0);
+
+            return SessionListDto.builder()
+                    .hostId(host.getId())
+                    .hostName(host.getHostName())
+                    .imgUrl(imgUrl)
+                    .waitingCount(waiting)
+                    .estimatedTime(calculateEstimatedTime(host.getStartTime(), host.getEndTime()))
+                    .build();
+        }).toList();
+
+
+    }
 }

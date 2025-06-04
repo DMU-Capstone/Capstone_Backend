@@ -1,6 +1,4 @@
-package com.waitit.capstone.domain.main.dto;
-
-import lombok.Getter;
+package com.waitit.capstone.domain.search.dto;
 
 
 public record SearchTermCountDto(String searchTerm, Long count) {}

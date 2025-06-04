@@ -1,4 +1,4 @@
-package com.waitit.capstone.domain.main;
+package com.waitit.capstone.domain.search;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
