@@ -60,7 +60,7 @@
 #       https://github.com/gradle/gradle/blob/HEAD/platforms/jvm/plugins-application/src/main/resources/org/gradle/api/internal/plugins/unixStartScript.txt
 #       within the Gradle project.
 #
-#       You can find Gradle at https://github.com/gradle/gradle/.
+#       You can search Gradle at https://github.com/gradle/gradle/.
 #
 ##############################################################################
 
@@ -163,7 +163,7 @@ fi
 
 # Collect all arguments for the java command, stacking in reverse order:
 #   * args from the command line
-#   * the main class name
+#   * the search class name
 #   * -classpath
 #   * -D...appname settings
 #   * --module-path (only if needed)

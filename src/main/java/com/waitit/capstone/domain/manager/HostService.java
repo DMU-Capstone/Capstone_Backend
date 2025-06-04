@@ -1,18 +1,19 @@
 package com.waitit.capstone.domain.manager;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.image.entity.HostImage;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
+import com.waitit.capstone.domain.manager.dto.WaitingListDto;
+import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -26,9 +27,6 @@ public class HostService {
     private final HostMapper hostMapper;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     private final ImageService imageService;
-    public boolean hostExist(Long id) {
-        return true;
-    }
 
     //호스트 정보 저장
     public void saveHost(HostRequest request,List<MultipartFile> hostImages) throws IOException {
@@ -50,10 +48,12 @@ public class HostService {
 
 
         String key = "waitList" + host.getId();
-        //세션 등록
-        redisTemplate.opsForList().rightPush(key, host.getHostName());
+
         // 활성 호스트 Set 호스트 ID 추가
         redisTemplate.opsForSet().add(ACTIVE_HOSTS_KEY, host.getId().toString());
+        //최신 정렬용 ZSet추가 CurrentTimeMills순으로 정렬
+        long timestamp = System.currentTimeMillis();
+        redisTemplate.opsForZSet().add("sorted:hosts", host.getId().toString(), timestamp);
     }
 
     // 호스트 세션 비활성화
@@ -97,25 +97,72 @@ public class HostService {
         }).toList();
     }
 
-    // 호스트가 활성 상태인지 확인
-    public boolean isHostActive(Long hostId) {
-        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ACTIVE_HOSTS_KEY, hostId.toString()));
-    }
+
 
     // 예상 시간 계산 메소드
     private String calculateEstimatedTime(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime == null || endTime == null) {
-            return "미정";
-        }
+        return null;
+    }
+    //웨이팅 리스트 조회
+    public List<WaitingListDto> getQueueListByHostId(Long hostId) {
+        String key = "waitList" + hostId;
+        List<String> rawList = redisTemplate.opsForList().range(key, 0, -1);
 
-        Duration duration = Duration.between(startTime, endTime);
-        long hours = duration.toHours();
-        long minutes = duration.toMinutesPart();
+        if (rawList == null) return List.of(); // null 방지
 
-        if (hours > 0) {
-            return hours + "시간 " + (minutes > 0 ? minutes + "분" : "");
-        } else {
-            return minutes + "분";
+        List<QueueDto> list = rawList.stream()
+                .map(this::convertStringToDto)
+                .toList();
+        return hostMapper.queueToWaiting(list);
+    }
+
+    public QueueDto convertStringToDto(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, QueueDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("QueueDto 역직렬화 실패", e);
         }
+    }
+    //트렌드 호스트
+    public List<SessionListDto> findTrendHost(int count){
+        Set<String> latestHostIds = redisTemplate.opsForZSet()
+                .reverseRange("sorted:hosts", 0, count - 1); // 최신 등록 순
+
+        if (latestHostIds == null || latestHostIds.isEmpty()) return List.of();
+
+        List<Long> ids = latestHostIds.stream()
+                .map(Long::valueOf)
+                .toList();
+
+        List<Host> hosts = hostRepository.findAllById(ids);
+
+        // 정렬 보존: ZSet의 순서 → DB 결과의 순서 보장 X → 다시 정렬 필요
+        List<Host> sorted = ids.stream()
+                .map(id -> hosts.stream().filter(h -> h.getId().equals(id)).findFirst().orElse(null))
+                .filter(h -> h != null)
+                .toList();
+
+        return sorted.stream().map(host -> {
+            String imgUrl = host.getImages().stream()
+                    .findFirst()
+                    .map(HostImage::getImgPath)
+                    .orElse(null);
+
+            int waiting = Optional.ofNullable(redisTemplate.opsForList()
+                            .size("waitList" + host.getId()))
+                    .map(Long::intValue)
+                    .orElse(0);
+
+            return SessionListDto.builder()
+                    .hostId(host.getId())
+                    .hostName(host.getHostName())
+                    .imgUrl(imgUrl)
+                    .waitingCount(waiting)
+                    .estimatedTime(calculateEstimatedTime(host.getStartTime(), host.getEndTime()))
+                    .build();
+        }).toList();
+
+
     }
 }

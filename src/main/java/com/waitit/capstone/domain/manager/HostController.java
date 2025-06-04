@@ -3,6 +3,7 @@ package com.waitit.capstone.domain.manager;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
+import com.waitit.capstone.domain.manager.dto.WaitingListDto;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,5 +53,17 @@ public class HostController {
     public ResponseEntity<List<SessionListDto>> getSessionList(){
         List<SessionListDto> sessions = hostService.getAllSessions();
         return ResponseEntity.status(HttpStatus.OK).body(sessions);
+    }
+
+    @GetMapping("/waiting/{id}")
+    public ResponseEntity<?> getWaitingList(@PathVariable Long id){
+        List<WaitingListDto> list = hostService.getQueueListByHostId(id);
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/trend")
+    public ResponseEntity<List<SessionListDto>> getTrentHost(@RequestParam int count){
+        List<SessionListDto> list = hostService.findTrendHost(count);
+        return ResponseEntity.ok(list);
     }
 }

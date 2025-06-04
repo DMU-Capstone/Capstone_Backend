@@ -27,4 +27,5 @@ public class AllHostRequest {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+    private boolean isActive;
 }
