@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,9 +55,16 @@ public class HostController {
         List<SessionListDto> sessions = hostService.getAllSessions();
         return ResponseEntity.status(HttpStatus.OK).body(sessions);
     }
+
     @GetMapping("/waiting/{id}")
     public ResponseEntity<?> getWaitingList(@PathVariable Long id){
         List<WaitingListDto> list = hostService.getQueueListByHostId(id);
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/trend")
+    public ResponseEntity<List<SessionListDto>> getTrentHost(@RequestParam int count){
+        List<SessionListDto> list = hostService.findTrendHost(count);
         return ResponseEntity.ok(list);
     }
 }

@@ -125,7 +125,7 @@ public class HostService {
         }
     }
     //트렌드 호스트
-    public List<?> findTrendHost(int count){
+    public List<SessionListDto> findTrendHost(int count){
         Set<String> latestHostIds = redisTemplate.opsForZSet()
                 .reverseRange("sorted:hosts", 0, count - 1); // 최신 등록 순
 
