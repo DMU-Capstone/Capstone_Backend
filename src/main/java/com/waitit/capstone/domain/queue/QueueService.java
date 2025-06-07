@@ -127,4 +127,8 @@ public class QueueService {
         }
 
     }
+
+    public int userRegisterQueue(Long id,int count, String token) {
+
+    }
 }
