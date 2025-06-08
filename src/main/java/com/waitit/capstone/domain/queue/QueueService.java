@@ -2,7 +2,10 @@ package com.waitit.capstone.domain.queue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.waitit.capstone.domain.member.Entity.Member;
+import com.waitit.capstone.domain.member.MemberRepository;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
+import com.waitit.capstone.global.security.jwt.JWTUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class QueueService {
     private final StringRedisTemplate redisTemplate;
+    private final JWTUtil jwtUtil;
+    private final MemberRepository memberRepository;
+
     //host 존재 여부 확인
         private boolean isHostActive(Long hostId) {
         return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember("active:hosts", hostId.toString()));
@@ -34,6 +40,7 @@ public class QueueService {
             throw new RuntimeException("QueueDto 역직렬화 실패", e);
         }
     }
+    //비회원일시 줄서기
     public int registerQueue(Long id, QueueDto dto){
         if (!isHostActive(id)) {
             throw new IllegalStateException("비활성화된 호스트입니다.");
@@ -49,6 +56,12 @@ public class QueueService {
         }
 
         return size.intValue()-1;
+    }
+    //회원일시 줄서기
+    public int userRegisterQueue(Long host_id,int count, String token) {
+        Member member = memberRepository.findMemberByName(jwtUtil.getUsername(token));
+        QueueDto dto = new QueueDto(member.getPhoneNumber(), member.getName(), count);
+        return registerQueue(host_id,dto);
     }
     public int getMyPosition(Long hostId, QueueDto myDto){
         String key = "waitList" + hostId;
@@ -127,4 +140,6 @@ public class QueueService {
         }
 
     }
+
+
 }
