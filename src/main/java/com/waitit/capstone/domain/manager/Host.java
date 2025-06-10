@@ -50,7 +50,7 @@ public class Host {
 
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-
+    private boolean isActive;
     public void addImage(HostImage img) {
         images.add(img);
         img.setHost(this);
