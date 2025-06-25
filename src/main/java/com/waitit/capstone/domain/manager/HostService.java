@@ -11,13 +11,20 @@ import com.waitit.capstone.domain.manager.dto.WaitingListDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import org.redisson.api.RBatch;
+import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
+import org.redisson.codec.JsonJacksonCodec;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @AllArgsConstructor
@@ -26,16 +33,19 @@ public class HostService {
     private final HostRepository hostRepository;
     private final StringRedisTemplate redisTemplate;
     private final HostMapper hostMapper;
-    private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     private final ImageService imageService;
     private final RedissonClient redissonClient;
-
+    private static final String ACTIVE_HOSTS_KEY = "active:hosts";
+    private static final String SORTED_HOSTS_KEY = "sorted:hosts";
+    private String getWaitListKey(Long hostId) {
+        return "waitList:" + hostId;
+    }
     //호스트 정보 저장
+    @Transactional
     public void saveHost(HostRequest request,List<MultipartFile> hostImages) throws IOException {
 
         Host host = hostMapper.toEntity(request);
         Host saved = hostRepository.save(host);
-
 
         if (hostImages != null) {
             for (MultipartFile file : hostImages) {
@@ -49,45 +59,51 @@ public class HostService {
         }
 
 
-        String key = "waitList" + host.getId();
+        // 1. 활성 호스트 Set에 호스트 ID 추가
+        RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
+        activeHosts.add(host.getId());
 
-        // 활성 호스트 Set 호스트 ID 추가
-        redisTemplate.opsForSet().add(ACTIVE_HOSTS_KEY, host.getId().toString());
-        //최신 정렬용 ZSet추가 CurrentTimeMills순으로 정렬
-        long timestamp = System.currentTimeMillis();
-        redisTemplate.opsForZSet().add("sorted:hosts", host.getId().toString(), timestamp);
+        // 2. 최신 정렬용 ZSet에 추가 (Score: 현재 시간)
+        RScoredSortedSet<Long> sortedHosts = redissonClient.getScoredSortedSet(SORTED_HOSTS_KEY);
+        sortedHosts.add(System.currentTimeMillis(), host.getId());
     }
 
     // 호스트 세션 비활성화
+    @Transactional
     public void deactivateHost(Long hostId) {
-        // 활성 호스트 Set에서 호스트 ID 제거
-        redisTemplate.opsForSet().remove(ACTIVE_HOSTS_KEY, hostId.toString());
+        // RBatch를 사용해 여러 명령을 원자적으로 실행
+        RBatch batch = redissonClient.createBatch();
+
+        // 1. 활성 호스트 Set에서 호스트 ID 제거
+        batch.getSet(ACTIVE_HOSTS_KEY).removeAsync(hostId);
+        // 2. 정렬용 Set에서도 호스트 ID 제거
+        batch.getScoredSortedSet(SORTED_HOSTS_KEY).removeAsync(hostId);
+        // 3. 해당 호스트의 대기열 데이터도 삭제
+        batch.getScoredSortedSet(getWaitListKey(hostId)).deleteAsync();
+
+        batch.execute();
     }
 
     //요청받은 아이디로 db에 호스트 조회
     public HostResponse getHost(Long id) {
-        Host host = hostRepository.findHostById(id);
+        Host host = hostRepository.findHostById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Host not found with id: " + id));
         return hostMapper.hostToDto(host);
     }
 
     public List<SessionListDto> getAllSessions() {
-        Set<String> activeIds = redisTemplate.opsForSet().members(ACTIVE_HOSTS_KEY);
-        if (activeIds == null || activeIds.isEmpty()) return List.of();
+        RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
+        Set<Long> activeIds = activeHosts.readAll();
 
-        List<Long> ids = activeIds.stream().map(Long::valueOf).toList();
-        List<Host> hosts = hostRepository.findAllById(ids);
+        if (activeIds.isEmpty()) return List.of();
+
+        List<Host> hosts = hostRepository.findAllById(activeIds);
 
         return hosts.stream().map(host -> {
-            // 첫 번째 이미지 URL 꺼내기
-            String imgUrl = host.getImages().stream()
-                    .findFirst()
-                    .map(HostImage::getImgPath)
-                    .orElse(null);
+            String imgUrl = host.getImages().stream().findFirst().map(HostImage::getImgPath).orElse(null);
 
-            int waiting = Optional.ofNullable(redisTemplate.opsForList()
-                            .size("waitList" + host.getId()))
-                    .map(Long::intValue)
-                    .orElse(0);
+            // 대기열 크기를 RScoredSortedSet의 size()로 조회
+            int waiting = redissonClient.getScoredSortedSet(getWaitListKey(host.getId())).size();
 
             return SessionListDto.builder()
                     .hostId(host.getId())
@@ -96,8 +112,9 @@ public class HostService {
                     .waitingCount(waiting)
                     .estimatedTime(calculateEstimatedTime(host.getStartTime(), host.getEndTime()))
                     .build();
-        }).toList();
+        }).collect(Collectors.toList());
     }
+
 
 
 
@@ -107,15 +124,16 @@ public class HostService {
     }
     //웨이팅 리스트 조회
     public List<WaitingListDto> getQueueListByHostId(Long hostId) {
-        String key = "waitList" + hostId;
-        List<String> rawList = redisTemplate.opsForList().range(key, 0, -1);
+        String key = getWaitListKey(hostId);
 
-        if (rawList == null) return List.of(); // null 방지
+        // Codec을 사용하여 QueueDto 객체로 직접 작업
+        RScoredSortedSet<QueueDto> queue = redissonClient.getScoredSortedSet(key, new JsonJacksonCodec(
+                QueueDto.class.getClassLoader()));
 
-        List<QueueDto> list = rawList.stream()
-                .map(this::convertStringToDto)
-                .toList();
-        return hostMapper.queueToWaiting(list);
+        // 모든 대기열 멤버(QueueDto 객체)를 Score 순서대로 가져옴
+        Collection<QueueDto> dtoList = queue.readAll();
+
+        return hostMapper.queueToWaiting(new ArrayList<>(dtoList));
     }
 
     public QueueDto convertStringToDto(String json) {
@@ -128,34 +146,26 @@ public class HostService {
     }
     //트렌드 호스트
     public List<SessionListDto> findTrendHost(int count){
-        Set<String> latestHostIds = redisTemplate.opsForZSet()
-                .reverseRange("sorted:hosts", 0, count - 1); // 최신 등록 순
+        RScoredSortedSet<Long> sortedHosts = redissonClient.getScoredSortedSet(SORTED_HOSTS_KEY);
 
-        if (latestHostIds == null || latestHostIds.isEmpty()) return List.of();
+        // 1. 결과를 담을 비어있는 List를 먼저 생성합니다.
+        List<Long> latestHostIds = new ArrayList<>();
 
-        List<Long> ids = latestHostIds.stream()
-                .map(Long::valueOf)
-                .toList();
+        // 2. revRangeTo 메소드를 호출하여 위에서 만든 List에 결과를 채워넣습니다.
+        sortedHosts.revRangeTo(latestHostIds.toString(), 0, count - 1);
 
-        List<Host> hosts = hostRepository.findAllById(ids);
+        if (latestHostIds.isEmpty()) return List.of();
 
-        // 정렬 보존: ZSet의 순서 → DB 결과의 순서 보장 X → 다시 정렬 필요
-        List<Host> sorted = ids.stream()
-                .map(id -> hosts.stream().filter(h -> h.getId().equals(id)).findFirst().orElse(null))
-                .filter(h -> h != null)
+        List<Host> hosts = hostRepository.findAllById(latestHostIds);
+
+        // Redis에서 조회한 순서대로 DB 조회 결과를 정렬
+        List<Host> sorted = latestHostIds.stream()
+                .flatMap(id -> hosts.stream().filter(h -> h.getId().equals(id)))
                 .toList();
 
         return sorted.stream().map(host -> {
-            String imgUrl = host.getImages().stream()
-                    .findFirst()
-                    .map(HostImage::getImgPath)
-                    .orElse(null);
-
-            int waiting = Optional.ofNullable(redisTemplate.opsForList()
-                            .size("waitList" + host.getId()))
-                    .map(Long::intValue)
-                    .orElse(0);
-
+            String imgUrl = host.getImages().stream().findFirst().map(HostImage::getImgPath).orElse(null);
+            int waiting = redissonClient.getScoredSortedSet(getWaitListKey(host.getId())).size();
             return SessionListDto.builder()
                     .hostId(host.getId())
                     .hostName(host.getHostName())
@@ -163,8 +173,6 @@ public class HostService {
                     .waitingCount(waiting)
                     .estimatedTime(calculateEstimatedTime(host.getStartTime(), host.getEndTime()))
                     .build();
-        }).toList();
-
-
+        }).collect(Collectors.toList());
     }
 }
