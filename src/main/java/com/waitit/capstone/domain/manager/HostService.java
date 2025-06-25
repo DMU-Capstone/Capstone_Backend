@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +28,7 @@ public class HostService {
     private final HostMapper hostMapper;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     private final ImageService imageService;
+    private final RedissonClient redissonClient;
 
     //호스트 정보 저장
     public void saveHost(HostRequest request,List<MultipartFile> hostImages) throws IOException {

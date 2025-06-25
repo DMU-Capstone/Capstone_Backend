@@ -59,7 +59,8 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
     //sms 인증 서비스 coolsms
     implementation 'net.nurigo:sdk:4.3.2'
-
+    //redisson
+    implementation 'org.redisson:redisson-spring-boot-starter:3.50.0'
 
 
 }
