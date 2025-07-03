@@ -65,46 +65,4 @@ public class QueueService {
         list.remove(dto);
     }
 
-    /**
-     * 내 QueueDto를 현재 위치에서 offset만큼 뒤로 이동시킵니다.
-     * @param hostId   호스트 ID
-     * @param dto      내 QueueDto
-     * @param offset   뒤로 미룰 칸 수 (0 이하면 아무 동작 안 함)
-     */
-    public void postpone(Long hostId, QueueDto dto, int offset) {
-        if (offset <= 0)  throw new IllegalStateException("1칸 이상 칸을 미뤄야 합니다.");
-
-        String key    = "waitList" + hostId;
-
-        // 1) 현재 위치 조회
-        int oldPos = getMyPosition(hostId, dto);
-        if (oldPos < 0) {
-            throw new IllegalStateException("대기열에 등록되어 있지 않습니다.");
-        }
-
-        // 2) 리스트에서 하나만 제거
-        Long removed = redisTemplate.opsForList().remove(key, 1, member);
-        if (removed == null || removed == 0) {
-            throw new RuntimeException("대기열에서 제거 실패");
-        }
-
-        // 3) 제거 후 남은 리스트 전체 조회
-        List<String> list = redisTemplate.opsForList().range(key, 0, -1);
-        int size = (list != null ? list.size() : 0);
-
-        // 4) 새 목표 인덱스 계산
-        int newPos = Math.min(oldPos + offset, size);
-
-        // 5) 삽입
-        if (newPos >= size) {
-            // 끝에 붙이기
-            redisTemplate.opsForList().rightPush(key, member);
-        } else {
-            // 리스트 내에서 삽입할 기준 요소(pivot) 찾기
-            String pivot = list.get(newPos);
-            // pivot 앞에(member가 pivot의 index 위치로) 삽입
-            redisTemplate.opsForList().leftPush(key, pivot, member);
-        }
-
-    }
 }
