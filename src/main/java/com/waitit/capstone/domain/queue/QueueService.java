@@ -22,7 +22,7 @@ public class QueueService {
 
     //host 존재 여부 확인
     private boolean isHostActive(Long hostId) {
-        RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KE2Y);
+        RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
         return activeHosts.contains(hostId);
     }
     private String getWaitListKey(Long hostId) {
@@ -49,18 +49,10 @@ public class QueueService {
     }
 
     public int getMyPosition(Long hostId, QueueDto myDto){
-        String key = "waitList" + hostId;
-        byte[] rawKey    = key.getBytes(StandardCharsets.UTF_8);
-        byte[] rawMember = convertDtoToString(myDto).getBytes(StandardCharsets.UTF_8);
+        String key = getWaitListKey(hostId);
+        RList<QueueDto> queue = redissonClient.getList(key);
 
-        Long pos = redisTemplate.execute((RedisCallback<Long>) conn ->
-                // Redis 7.0 이상에서 지원하는 LPOS
-                conn.lPos(rawKey, rawMember)
-        );
-
-
-        // null이면 리스트에 없음
-        return pos != null ? pos.intValue() : -1;
+        return queue.indexOf(myDto)+1;
 
     }
 
