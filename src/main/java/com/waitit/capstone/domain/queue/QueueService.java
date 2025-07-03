@@ -3,6 +3,7 @@ package com.waitit.capstone.domain.queue;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RList;
+import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -14,6 +15,7 @@ public class QueueService {
     private final StringRedisTemplate redisTemplate;
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
+    \private static final String POSTPONE_HOSTS_KEY = "postpone:hosts";
 
     //host 존재 여부 확인
     private boolean isHostActive(Long hostId) {
@@ -23,6 +25,10 @@ public class QueueService {
     private String getWaitListKey(Long hostId) {
         return "waitList:" + hostId;
     }
+    private String getPostponeHostsKey(Long hostId) {
+        return "postponeList:" + hostId;
+    }
+
 
     public int registerQueue(Long id, QueueDto dto){
         if (!isHostActive(id)) {
@@ -53,7 +59,13 @@ public class QueueService {
     }
 
     public void postpone(Long id, QueueDto dto){
+        RList<QueueDto> list = redissonClient.getList(getWaitListKey(id));
+        list.remove(dto); //대기열에서 미루는 사람 제거
 
+        long postponeDurationMills = 10 * 60 * 1000;//10분
+        long expirationTimestamp = System.currentTimeMillis() + postponeDurationMills;
+        RScoredSortedSet<QueueDto> postponeSet = redissonClient.getScoredSortedSet(getWaitListKey(id));
+        postponeSet.add(expirationTimestamp,dto);//10분뒤 만료됨
     }
     public void deletePostpone(Long id, QueueDto dto){
 
