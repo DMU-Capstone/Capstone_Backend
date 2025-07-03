@@ -6,6 +6,7 @@ import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class QueueService {
     private final StringRedisTemplate redisTemplate;
+    private final RedissonClient redissonClient;
+    private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     //host 존재 여부 확인
         private boolean isHostActive(Long hostId) {
-        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember("active:hosts", hostId.toString()));
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ACTIVE_HOSTS_KEY, hostId.toString()));
     }
+
     private String convertDtoToString(QueueDto dto) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -26,6 +30,7 @@ public class QueueService {
             throw new RuntimeException("QueueDto 직렬화 실패", e);
         }
         }
+
     public QueueDto convertStringToDto(String json) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -34,6 +39,7 @@ public class QueueService {
             throw new RuntimeException("QueueDto 역직렬화 실패", e);
         }
     }
+
     public int registerQueue(Long id, QueueDto dto){
         if (!isHostActive(id)) {
             throw new IllegalStateException("비활성화된 호스트입니다.");
@@ -50,6 +56,7 @@ public class QueueService {
 
         return size.intValue()-1;
     }
+
     public int getMyPosition(Long hostId, QueueDto myDto){
         String key = "waitList" + hostId;
         byte[] rawKey    = key.getBytes(StandardCharsets.UTF_8);
@@ -84,6 +91,7 @@ public class QueueService {
         }
 
     }
+
     /**
      * 내 QueueDto를 현재 위치에서 offset만큼 뒤로 이동시킵니다.
      * @param hostId   호스트 ID

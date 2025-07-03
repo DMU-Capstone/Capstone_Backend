@@ -31,6 +31,6 @@ public class SmsRepository {
 
     // 해당 키가 존재하는지 확인하는 메서드
     public boolean hasKey(String phone){
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(PREFIX + phone)); // Redis에서 키의 존재 여부를 확인
+        return stringRedisTemplate.hasKey(PREFIX + phone); // Redis에서 키의 존재 여부를 확인
     }
 }
