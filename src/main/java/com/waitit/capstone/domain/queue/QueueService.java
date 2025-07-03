@@ -22,24 +22,6 @@ public class QueueService {
         return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ACTIVE_HOSTS_KEY, hostId.toString()));
     }
 
-    private String convertDtoToString(QueueDto dto) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("QueueDto 직렬화 실패", e);
-        }
-        }
-
-    public QueueDto convertStringToDto(String json) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(json, QueueDto.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("QueueDto 역직렬화 실패", e);
-        }
-    }
-
     public int registerQueue(Long id, QueueDto dto){
         if (!isHostActive(id)) {
             throw new IllegalStateException("비활성화된 호스트입니다.");
