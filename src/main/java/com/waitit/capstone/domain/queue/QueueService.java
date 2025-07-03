@@ -15,7 +15,7 @@ public class QueueService {
     private final StringRedisTemplate redisTemplate;
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
-    \private static final String POSTPONE_HOSTS_KEY = "postpone:hosts";
+    private static final String POSTPONE_HOSTS_KEY = "postpone:hosts";
 
     //host 존재 여부 확인
     private boolean isHostActive(Long hostId) {
@@ -68,6 +68,8 @@ public class QueueService {
         postponeSet.add(expirationTimestamp,dto);//10분뒤 만료됨
     }
     public void deletePostpone(Long id, QueueDto dto){
-
+        RList<QueueDto> list = redissonClient.getList(getWaitListKey(id));
+        RScoredSortedSet<QueueDto> postponeSet = redissonClient.getScoredSortedSet(getWaitListKey(id));
+        postponeSet.remove(dto);
     }
 }
