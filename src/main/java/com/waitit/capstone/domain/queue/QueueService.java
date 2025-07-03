@@ -1,15 +1,10 @@
 package com.waitit.capstone.domain.queue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RList;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -34,10 +29,8 @@ public class QueueService {
             throw new IllegalStateException("비활성화된 호스트입니다.");
         }
 
-        String key = getWaitListKey(id);
-
         // 줄 세우기 - Redis 리스트에 DTO 추가
-        RList<QueueDto> queue = redissonClient.getList(key);
+        RList<QueueDto> queue = redissonClient.getList(getWaitListKey(id));
 
         if (queue == null) {
             throw new RuntimeException("대기열 등록 실패");
@@ -49,19 +42,13 @@ public class QueueService {
     }
 
     public int getMyPosition(Long hostId, QueueDto myDto){
-
-        String key = getWaitListKey(hostId);
-        RList<QueueDto> queue = redissonClient.getList(key);
-
+        RList<QueueDto> queue = redissonClient.getList(getWaitListKey(hostId));
         return queue.indexOf(myDto)+1;
 
     }
 
     public void deleteMyRegister(Long id, QueueDto dto) {
-
-        String key    =  getWaitListKey(id);
-        RList<QueueDto> list = redissonClient.getList(key);
-
+        RList<QueueDto> list = redissonClient.getList(getWaitListKey(id));
         list.remove(dto);
     }
 
