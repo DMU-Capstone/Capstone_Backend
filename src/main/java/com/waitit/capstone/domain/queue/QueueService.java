@@ -6,6 +6,7 @@ import com.waitit.capstone.domain.queue.dto.QueueDto;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,9 +18,13 @@ public class QueueService {
     private final StringRedisTemplate redisTemplate;
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
+
     //host 존재 여부 확인
-        private boolean isHostActive(Long hostId) {
+    private boolean isHostActive(Long hostId) {
         return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ACTIVE_HOSTS_KEY, hostId.toString()));
+    }
+    private String getWaitListKey(Long hostId) {
+        return "waitList:" + hostId;
     }
 
     public int registerQueue(Long id, QueueDto dto){
@@ -27,16 +32,18 @@ public class QueueService {
             throw new IllegalStateException("비활성화된 호스트입니다.");
         }
 
-        String key = "waitList" + id;
+        String key = getWaitListKey(id);
 
         // 줄 세우기 - Redis 리스트에 DTO 추가
-        Long size = redisTemplate.opsForList().rightPush(key, convertDtoToString(dto));
+        RList<QueueDto> queue = redissonClient.getList(key);
 
-        if (size == null) {
+        if (queue == null) {
             throw new RuntimeException("대기열 등록 실패");
         }
 
-        return size.intValue()-1;
+        queue.add(dto);
+
+        return queue.size()-1;
     }
 
     public int getMyPosition(Long hostId, QueueDto myDto){
