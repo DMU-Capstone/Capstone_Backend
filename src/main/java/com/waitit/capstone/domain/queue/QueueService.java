@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RList;
+import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,7 +22,8 @@ public class QueueService {
 
     //host 존재 여부 확인
     private boolean isHostActive(Long hostId) {
-        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ACTIVE_HOSTS_KEY, hostId.toString()));
+        RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KE2Y);
+        return activeHosts.contains(hostId);
     }
     private String getWaitListKey(Long hostId) {
         return "waitList:" + hostId;
