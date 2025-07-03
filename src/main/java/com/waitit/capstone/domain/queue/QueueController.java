@@ -88,8 +88,8 @@ public class QueueController {
             @PathVariable Long id,
             @RequestBody QueueRequest queueRequest){
         QueueDto dto = queueMapper.requestToDto(queueRequest);
-        queueService.postpone(id,dto,2);
-        return ResponseEntity.status(HttpStatus.OK).body("대기 2칸 미룸");
+        queueService.postpone(id,dto);
+        return ResponseEntity.status(HttpStatus.OK).body("대기 미룸");
     }
 
 }

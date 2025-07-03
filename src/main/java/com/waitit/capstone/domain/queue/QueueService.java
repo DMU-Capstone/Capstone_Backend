@@ -52,4 +52,10 @@ public class QueueService {
         list.remove(dto);
     }
 
+    public void postpone(Long id, QueueDto dto){
+
+    }
+    public void deletePostpone(Long id, QueueDto dto){
+
+    }
 }
