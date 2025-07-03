@@ -136,14 +136,6 @@ public class HostService {
         return hostMapper.queueToWaiting(new ArrayList<>(dtoList));
     }
 
-    public QueueDto convertStringToDto(String json) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(json, QueueDto.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("QueueDto 역직렬화 실패", e);
-        }
-    }
     //트렌드 호스트
     public List<SessionListDto> findTrendHost(int count){
         RScoredSortedSet<Long> sortedHosts = redissonClient.getScoredSortedSet(SORTED_HOSTS_KEY);
