@@ -49,6 +49,7 @@ public class QueueService {
     }
 
     public int getMyPosition(Long hostId, QueueDto myDto){
+
         String key = getWaitListKey(hostId);
         RList<QueueDto> queue = redissonClient.getList(key);
 
@@ -57,22 +58,11 @@ public class QueueService {
     }
 
     public void deleteMyRegister(Long id, QueueDto dto) {
-        String key    = "waitList" + id;
-        String member = convertDtoToString(dto);
 
-        // 1) 삭제 전 내 위치를 알아두기 (0-based)
-        int pos = getMyPosition(id, dto);
-        if (pos < 0) {
-            throw new IllegalStateException("대기열에 등록되어 있지 않습니다.");
-        }
+        String key    =  getWaitListKey(id);
+        RList<QueueDto> list = redissonClient.getList(key);
 
-        // 2) Redis LREM 명령으로 리스트에서 해당 항목(첫 번째)을 삭제
-        //    remove(key, count, value) → count=1이면 첫 번째 매칭만 지움
-        Long removedCount = redisTemplate.opsForList().remove(key, 1, member);
-        if (removedCount == null || removedCount == 0) {
-            throw new RuntimeException("대기열 제거에 실패했습니다.");
-        }
-
+        list.remove(dto);
     }
 
     /**
@@ -85,7 +75,6 @@ public class QueueService {
         if (offset <= 0)  throw new IllegalStateException("1칸 이상 칸을 미뤄야 합니다.");
 
         String key    = "waitList" + hostId;
-        String member = convertDtoToString(dto);
 
         // 1) 현재 위치 조회
         int oldPos = getMyPosition(hostId, dto);
