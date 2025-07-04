@@ -20,6 +20,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import org.redisson.api.RList;
+import org.redisson.api.RSet;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -38,6 +41,8 @@ public class AdminService {
     private final QueueService queueService;
     private final StringRedisTemplate redisTemplate;
     private final EventImageRepository eventImageRepository;
+    private final RedissonClient redissonClient;
+    private static final String ACTIVE_HOSTS_KEY = "active:hosts";
 
 
     //모든 유저를 조회후 페이징
@@ -109,23 +114,8 @@ public class AdminService {
     }
     //각 대기열 세부 목록 조회
     public List<QueueDto> getQueueDtoByHostId(String hostId) {
-        String key = "waitList" + hostId;
-        List<String> rawList = redisTemplate.opsForList().range(key, 0, -1);
-
-        if (rawList == null) return List.of();
-
-        return rawList.stream()
-                .filter(s -> s != null && s.trim().startsWith("{")) // JSON 객체만
-                .map(s -> {
-                    try {
-                        return queueService.convertStringToDto(s);
-                    } catch (RuntimeException e) {
-                        System.err.println("[QueueDto 역직렬화 실패] 값: " + s);
-                        return null; // 실패한 값은 무시
-                    }
-                })
-                .filter(Objects::nonNull) // null 제거
-                .toList();
+        RList<QueueDto> queue = redissonClient.getList("waitList:" + hostId);
+        return queue.stream().toList();
     }
 
     public void deleteImage(Long id) {
