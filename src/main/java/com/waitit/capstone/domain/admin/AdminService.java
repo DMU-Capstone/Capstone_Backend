@@ -16,12 +16,10 @@ import com.waitit.capstone.domain.queue.QueueService;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.global.util.PageResponse;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.redisson.api.RList;
-import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -115,7 +113,7 @@ public class AdminService {
     //각 대기열 세부 목록 조회
     public List<QueueDto> getQueueDtoByHostId(String hostId) {
         RList<QueueDto> queue = redissonClient.getList("waitList:" + hostId);
-        return queue.stream().toList();
+        return queue.readAll();
     }
 
     public void deleteImage(Long id) {

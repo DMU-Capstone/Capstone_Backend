@@ -61,7 +61,8 @@ dependencies {
     implementation 'net.nurigo:sdk:4.3.2'
     //redisson
     implementation 'org.redisson:redisson-spring-boot-starter:3.50.0'
-
+    //레디스 직렬화를 위한 라이브러리
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
 }
 

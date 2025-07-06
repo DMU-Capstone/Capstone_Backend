@@ -1,0 +1,20 @@
+singleServerConfig:
+  # Redis 서버 주소. "redis://호스트:포트" 형식으로 입력합니다.
+  address: "redis://redis:6379"
+
+  # 사용할 데이터베이스 번호 (0~15)
+  database: 0
+
+  # 연결 풀(Connection Pool) 크기
+  connectionPoolSize: 64
+
+  # 최소 유휴(idle) 연결 수
+  connectionMinimumIdleSize: 10
+
+  # 연결 시도 타임아웃 (밀리초 단위)
+  connectTimeout: 10000
+
+  # 응답 대기 타임아웃 (밀리초 단위)
+  timeout: 3000
+
+codec: !<org.redisson.codec.JsonJacksonCodec> {}
