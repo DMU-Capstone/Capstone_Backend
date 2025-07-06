@@ -6,13 +6,11 @@ import org.redisson.api.RList;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class QueueService {
-    private final StringRedisTemplate redisTemplate;
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     private static final String POSTPONE_HOSTS_KEY = "postpone:hosts";

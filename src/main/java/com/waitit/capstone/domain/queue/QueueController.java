@@ -40,14 +40,8 @@ public class QueueController {
         String token = request.getHeader("access");
         QueueDto dto = queueMapper.requestToDto(queueRequest);
         int index = 0;
+        index = queueService.registerQueue(id,dto);
 
-        //토큰이 널이면 비회원로직 아니면 회원 로직
-        if(token==null){
-            index = queueService.registerQueue(id,dto);
-        }
-        else{
-            index = queueService.userRegisterQueue(id,dto.getCount(),token);
-        }
 
         QueResponseDto responseDto = new QueResponseDto("대기열 등록 완료",index);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
