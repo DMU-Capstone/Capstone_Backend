@@ -107,7 +107,6 @@ public class AdminController {
     }
 
     //메인 이벤트배너 조회
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/event/select")
     public ResponseEntity<MainBannerResponse> getAllBanner(){
         MainBannerResponse responseList = adminService.getEventBanner();
