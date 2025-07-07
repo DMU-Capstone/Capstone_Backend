@@ -88,7 +88,7 @@ public class QueueController {
             return ResponseEntity.status(HttpStatus.OK).body("대기 취소 완료");
     }
 
-    //두칸 뒤로 미룸
+    //대기열 미루기 큐에 인원 추가
     @PostMapping("/{id}/postpone/")
     public ResponseEntity<?> queuePostpone(
             @PathVariable Long id,
@@ -96,6 +96,14 @@ public class QueueController {
         QueueDto dto = queueMapper.requestToDto(queueRequest);
         queueService.postpone(id,dto);
         return ResponseEntity.status(HttpStatus.OK).body("대기 미룸");
+    }
+    @PostMapping("/{id}/admit")
+    public ResponseEntity<?> admitFromPostpone(
+            @PathVariable Long id,
+            @RequestBody QueueRequest queueRequest) {
+        QueueDto dto = queueMapper.requestToDto(queueRequest);
+        queueService.deletePostpone(id, dto);
+        return ResponseEntity.status(HttpStatus.OK).body("미루기 큐에서 입장 처리되었습니다.");
     }
 
 }

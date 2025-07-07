@@ -2,6 +2,9 @@ package com.waitit.capstone.domain.queue;
 
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.BatchOptions;
+import org.redisson.api.BatchOptions.ExecutionMode;
+import org.redisson.api.RBatch;
 import org.redisson.api.RList;
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RSet;
@@ -13,8 +16,7 @@ import org.springframework.stereotype.Service;
 public class QueueService {
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
-    private static final String POSTPONE_HOSTS_KEY = "postpone:hosts";
-
+    private static final long POSTPONE_DURATION_MILLIS = 10 * 60 * 1000L;
     //host 존재 여부 확인
     private boolean isHostActive(Long hostId) {
         RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
@@ -36,13 +38,9 @@ public class QueueService {
         // 줄 세우기 - Redis 리스트에 DTO 추가
         RList<QueueDto> queue = redissonClient.getList(getWaitListKey(id));
 
-        if (queue == null) {
-            throw new RuntimeException("대기열 등록 실패");
-        }
-
         queue.add(dto);
 
-        return queue.size()-1;
+        return queue.size();
     }
 
     public int getMyPosition(Long hostId, QueueDto myDto){
@@ -57,17 +55,25 @@ public class QueueService {
     }
 
     public void postpone(Long id, QueueDto dto){
-        RList<QueueDto> list = redissonClient.getList(getWaitListKey(id));
-        list.remove(dto); //대기열에서 미루는 사람 제거
+        // 원자성 보장을 위해 RBatch 사용
+        BatchOptions options = BatchOptions.defaults()
+                .executionMode(ExecutionMode.IN_MEMORY_ATOMIC);
 
-        long postponeDurationMills = 10 * 60 * 1000;//10분
-        long expirationTimestamp = System.currentTimeMillis() + postponeDurationMills;
-        RScoredSortedSet<QueueDto> postponeSet = redissonClient.getScoredSortedSet(getWaitListKey(id));
-        postponeSet.add(expirationTimestamp,dto);//10분뒤 만료됨
+        RBatch batch = redissonClient.createBatch(options);
+
+        // 1. 대기열에서 제거
+        batch.getList(getWaitListKey(id)).removeAsync(dto);
+
+        // 2. 미루기 목록에 추가
+        long expirationTimestamp = System.currentTimeMillis() + POSTPONE_DURATION_MILLIS;
+        batch.getScoredSortedSet(getPostponeHostsKey(id)).addAsync(expirationTimestamp, dto);
+
+        // 두 작업 동시 실행
+        batch.execute();
     }
+
     public void deletePostpone(Long id, QueueDto dto){
-        RList<QueueDto> list = redissonClient.getList(getWaitListKey(id));
-        RScoredSortedSet<QueueDto> postponeSet = redissonClient.getScoredSortedSet(getWaitListKey(id));
+        RScoredSortedSet<QueueDto> postponeSet = redissonClient.getScoredSortedSet(getPostponeHostsKey(id));
         postponeSet.remove(dto);
     }
 }
