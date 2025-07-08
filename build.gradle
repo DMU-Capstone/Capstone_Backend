@@ -64,6 +64,8 @@ dependencies {
     //레디스 직렬화를 위한 라이브러리
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
+    //OAuth
+
 }
 
 tasks.named('test') {
