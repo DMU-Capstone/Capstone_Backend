@@ -1,5 +1,6 @@
 package com.waitit.capstone.domain.auth.service;
 
+import com.waitit.capstone.domain.auth.dto.KakaoResponse;
 import com.waitit.capstone.domain.auth.dto.OAuth2Response;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
