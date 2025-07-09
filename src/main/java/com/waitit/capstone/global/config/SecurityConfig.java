@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -79,6 +80,10 @@ public class SecurityConfig {
 
         //http basic 인증방식 disable
         http.httpBasic(AbstractHttpConfigurer::disable);
+
+        //oauth2
+        http
+                .oauth2Login(Customizer.withDefaults());
 
         //경로별 인가작업 -> 일단 작업을 위해 모두 허용
         /*.authorizeHttpRequests((auth) -> auth
