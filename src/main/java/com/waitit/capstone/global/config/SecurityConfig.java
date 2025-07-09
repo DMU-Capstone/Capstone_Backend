@@ -1,5 +1,6 @@
 package com.waitit.capstone.global.config;
 
+import com.waitit.capstone.domain.auth.service.CustomOAuth2UserService;
 import com.waitit.capstone.domain.auth.service.RefreshTokenService;
 import com.waitit.capstone.global.security.jwt.CustomLogoutFilter;
 import com.waitit.capstone.global.security.jwt.JWTFilter;
@@ -7,6 +8,7 @@ import com.waitit.capstone.global.security.jwt.JWTUtil;
 import com.waitit.capstone.global.security.jwt.LoginFilter;
 import com.waitit.capstone.global.security.jwt.RefreshTokenResolver;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,6 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@AllArgsConstructor
 public class SecurityConfig {
 
     //AuthenticationManager가 인자로 받을 AuthenticationConfiguraion 객체 생성자 주입
@@ -35,14 +38,9 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenResolver refreshTokenResolver;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,
-                          RefreshTokenService refreshTokenService, RefreshTokenResolver refreshTokenResolver) {
-        this.authenticationConfiguration = authenticationConfiguration;
-        this.jwtUtil = jwtUtil;
-        this.refreshTokenService = refreshTokenService;
-        this.refreshTokenResolver = refreshTokenResolver;
-    }
+
     //AuthenticationManager Bean 등록
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -83,7 +81,9 @@ public class SecurityConfig {
 
         //oauth2
         http
-                .oauth2Login(Customizer.withDefaults());
+                .oauth2Login((oauth2)->oauth2
+                        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+                                .userService(customOAuth2UserService)));
 
         //경로별 인가작업 -> 일단 작업을 위해 모두 허용
         /*.authorizeHttpRequests((auth) -> auth
