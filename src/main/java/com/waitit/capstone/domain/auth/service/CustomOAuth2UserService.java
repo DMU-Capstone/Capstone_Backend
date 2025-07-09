@@ -18,6 +18,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String registrationId = request.getClientRegistration().getRegistrationId();
         OAuth2Response oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
 
+        String username = oAuth2Response.getProvider()+" "+oAuth2Response.getProviderId();
+
+
     }
 
 }
