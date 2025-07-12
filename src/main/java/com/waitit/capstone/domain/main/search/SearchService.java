@@ -19,14 +19,11 @@ public class SearchService {
     public List<SessionListDto> findKeyword(String keyword,String user_ip){
         Keyword key = new Keyword(keyword,user_ip);
         keywordRepository.save(key);
-        List<SessionListDto> list = hostService.getAllSessions();
-        List<SessionListDto> results = new ArrayList<>();
-        for(SessionListDto i : list){
-            if(i.hostName().contains(keyword)){
-                results.add(i);
-            }
-        }
-        return results;
+
+        return hostService.getAllSessions()
+                .stream()
+                .filter(i -> i.hostName().contains(keyword))
+                .toList();
     }
 
 
