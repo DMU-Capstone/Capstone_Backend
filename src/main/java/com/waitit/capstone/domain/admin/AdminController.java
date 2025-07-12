@@ -106,14 +106,6 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body("이미지 이벤트 등록 완료");
     }
 
-    //메인 이벤트배너 조회
-    @GetMapping("/event/select")
-    public ResponseEntity<MainBannerResponse> getAllBanner(){
-        MainBannerResponse responseList = adminService.getEventBanner();
-        return ResponseEntity.ok(responseList);
-    }
-
-
     //대기열 현황 조회
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/active")
