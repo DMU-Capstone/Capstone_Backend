@@ -1,9 +1,8 @@
-package com.waitit.capstone.domain.search;
+package com.waitit.capstone.domain.main.search;
 
-import com.waitit.capstone.domain.search.dto.SearchTermCountDto;
+import com.waitit.capstone.domain.main.search.dto.SearchTermCountDto;
 import com.waitit.capstone.domain.manager.HostService;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;

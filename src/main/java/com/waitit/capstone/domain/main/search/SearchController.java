@@ -1,7 +1,7 @@
-package com.waitit.capstone.domain.search;
+package com.waitit.capstone.domain.main.search;
 
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
-import com.waitit.capstone.domain.search.dto.SearchTermCountDto;
+import com.waitit.capstone.domain.main.search.dto.SearchTermCountDto;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.AllArgsConstructor;
