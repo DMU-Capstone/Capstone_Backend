@@ -87,11 +87,6 @@ public class AdminService {
         return new PageResponse<>(allHostRequests);
     }
 
-    public MainBannerResponse getEventBanner() {
-        String redisKey = "main_banner";
-        List<String> list = redisTemplate.opsForList().range(redisKey, 0, 4);
-        return new MainBannerResponse("mainBanner", list);
-    }
     //현재 대기열 목록 조회
     public List<HostSummaryDto> getActiveHostSummaries() {
         Set<String> ids = redisTemplate.opsForSet().members("active:hosts");
