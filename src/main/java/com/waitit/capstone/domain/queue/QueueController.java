@@ -98,6 +98,7 @@ public class QueueController {
         queueService.postpone(id,dto);
         return ResponseEntity.status(HttpStatus.OK).body("대기 미룸");
     }
+    //미루기 큐에서 입장하기
     @PostMapping("/{id}/admit")
     public ResponseEntity<?> admitFromPostpone(
             @PathVariable Long id,
