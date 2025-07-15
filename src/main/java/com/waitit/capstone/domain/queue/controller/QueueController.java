@@ -1,5 +1,6 @@
-package com.waitit.capstone.domain.queue;
+package com.waitit.capstone.domain.queue.controller;
 
+import com.waitit.capstone.domain.queue.QueueMapper;
 import com.waitit.capstone.domain.queue.dto.QueResponseDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.domain.queue.dto.QueueRequest;
