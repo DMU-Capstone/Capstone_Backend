@@ -4,6 +4,7 @@ import com.waitit.capstone.domain.queue.dto.QueResponseDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.domain.queue.dto.QueueRequest;
 
+import com.waitit.capstone.domain.queue.service.QueueService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

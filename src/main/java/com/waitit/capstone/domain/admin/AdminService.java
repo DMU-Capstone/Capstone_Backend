@@ -3,7 +3,6 @@ package com.waitit.capstone.domain.admin;
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.HostSummaryDto;
-import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 
 import com.waitit.capstone.domain.image.ImageService;
@@ -12,7 +11,7 @@ import com.waitit.capstone.domain.manager.Host;
 import com.waitit.capstone.domain.manager.HostRepository;
 import com.waitit.capstone.domain.member.Entity.Member;
 import com.waitit.capstone.domain.member.MemberRepository;
-import com.waitit.capstone.domain.queue.QueueService;
+import com.waitit.capstone.domain.queue.service.QueueService;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.global.util.PageResponse;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.waitit.capstone.domain.queue;
+package com.waitit.capstone.domain.queue.service;
 
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import lombok.RequiredArgsConstructor;
