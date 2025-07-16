@@ -1,6 +1,7 @@
 package com.waitit.capstone.domain.manager;
 
 import com.waitit.capstone.domain.image.entity.HostImage;
+import com.waitit.capstone.domain.manager.dto.CoordinateDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -51,12 +52,18 @@ public class Host {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private boolean isActive;
+
     public void addImage(HostImage img) {
         images.add(img);
         img.setHost(this);
     }
+
     public void removeImage(HostImage img) {
         images.remove(img);
         img.setHost(null);
+    }
+
+    public CoordinateDto getLatLong(){
+        return new CoordinateDto(this.latitude,this.longitude);
     }
 }
