@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,12 +17,13 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RecommendationService {
 
     private final RestTemplate restTemplate;
     @Value("${kakao.api.key}")
-    private final String kakaoApiKey;
+    private String kakaoApiKey;
+
     private static final String KAKAO_API_URL = "https://dapi.kakao.com/v2/local/search/keyword.json";
 
     /**
@@ -30,7 +32,7 @@ public class RecommendationService {
      * @param waitingTime 분 단위의 대기 시간
      * @return 추천 장소 목록 DTO
      */
-    public PlaceResponseDto recommendPlace(CoordinateDto coordinateDto, int waitingTime){
+    public PlaceResponseDto recommendPlaces(CoordinateDto coordinateDto, int waitingTime){
         List<String> keywords = getKeywordsByTime(waitingTime);
 
         List<PlaceDto> places = keywords.parallelStream()
