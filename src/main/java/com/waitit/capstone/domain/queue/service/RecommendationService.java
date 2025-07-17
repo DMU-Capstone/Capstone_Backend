@@ -1,10 +1,16 @@
 package com.waitit.capstone.domain.queue.service;
 
 import com.waitit.capstone.domain.manager.dto.CoordinateDto;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
+@AllArgsConstructor
 public class RecommendationService {
+
+    private final RestTemplate restTemplate;
+
     //좌표위치와 시간을 받아서 가야 할 장소 판단
 
     //api 호출해서 지역 목록 반환
@@ -12,6 +18,8 @@ public class RecommendationService {
     private boolean isOverOneHour(int minute){
         return minute >= 60;
     }
+
+    public
 }
 /** 30분
  * 편의점 / 드럭스토어 (올리브영 등)
