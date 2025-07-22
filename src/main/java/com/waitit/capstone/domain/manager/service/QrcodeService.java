@@ -13,14 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class QrcodeService {
-    private final int WIDTH = 200;
-    private final int HEIGHT = 200;
 
 
     public byte[] makeQrCode(String url)throws WriterException, IOException {
 
         // QR Code - BitMatrix: qr code 정보 생성
-        BitMatrix encode  = new MultiFormatWriter().encode(url, BarcodeFormat.QR_CODE,WIDTH,HEIGHT);
+        int WIDTH = 200;
+        int HEIGHT = 200;
+        BitMatrix encode  = new MultiFormatWriter().encode(url, BarcodeFormat.QR_CODE, WIDTH, HEIGHT);
 
         try{
 
