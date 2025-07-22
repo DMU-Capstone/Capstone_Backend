@@ -1,5 +1,6 @@
-package com.waitit.capstone.domain.manager;
+package com.waitit.capstone.domain.manager.controller;
 
+import com.waitit.capstone.domain.manager.service.HostService;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;

@@ -56,7 +56,7 @@ dependencies {
     implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-choices:3.63.3'
     implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey3:3.63.3'
     //swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
     //sms 인증 서비스 coolsms
     implementation 'net.nurigo:sdk:4.3.2'
     //redisson
@@ -64,7 +64,9 @@ dependencies {
     //레디스 직렬화를 위한 라이브러리
     implementation 'com.fasterxml.jackson.core:jackson-databind'
 
-    //OAuth
+    // QR Code - zxing
+    implementation group: 'com.google.zxing', name: 'javase', version: '3.5.3'
+    implementation group: 'com.google.zxing', name: 'core', version: '3.5.3'
 
 }
 

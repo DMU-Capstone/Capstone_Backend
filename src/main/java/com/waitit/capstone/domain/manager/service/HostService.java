@@ -1,9 +1,10 @@
-package com.waitit.capstone.domain.manager;
+package com.waitit.capstone.domain.manager.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.image.entity.HostImage;
+import com.waitit.capstone.domain.manager.Host;
+import com.waitit.capstone.domain.manager.HostMapper;
+import com.waitit.capstone.domain.manager.HostRepository;
 import com.waitit.capstone.domain.manager.dto.HostRequest;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.dto.SessionListDto;
@@ -37,12 +38,14 @@ public class HostService {
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
     private static final String SORTED_HOSTS_KEY = "sorted:hosts";
+
     private String getWaitListKey(Long hostId) {
         return "waitList:" + hostId;
     }
+
     //호스트 정보 저장
     @Transactional
-    public void saveHost(HostRequest request,List<MultipartFile> hostImages) throws IOException {
+    public void saveHost(HostRequest request, List<MultipartFile> hostImages) throws IOException {
 
         Host host = hostMapper.toEntity(request);
         Host saved = hostRepository.save(host);
@@ -57,7 +60,6 @@ public class HostService {
             // cascade = ALL 이므로 save 한번 더 해 주면 이미지도 같이 저장
             hostRepository.save(saved);
         }
-
 
         // 1. 활성 호스트 Set에 호스트 ID 추가
         RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
@@ -95,7 +97,9 @@ public class HostService {
         RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
         Set<Long> activeIds = activeHosts.readAll();
 
-        if (activeIds.isEmpty()) return List.of();
+        if (activeIds.isEmpty()) {
+            return List.of();
+        }
 
         List<Host> hosts = hostRepository.findAllById(activeIds);
 
@@ -116,12 +120,11 @@ public class HostService {
     }
 
 
-
-
     // 예상 시간 계산 메소드
     private String calculateEstimatedTime(LocalDateTime startTime, LocalDateTime endTime) {
         return null;
     }
+
     //웨이팅 리스트 조회
     public List<WaitingListDto> getQueueListByHostId(Long hostId) {
         String key = getWaitListKey(hostId);
@@ -137,7 +140,7 @@ public class HostService {
     }
 
     //트렌드 호스트
-    public List<SessionListDto> findTrendHost(int count){
+    public List<SessionListDto> findTrendHost(int count) {
         RScoredSortedSet<Long> sortedHosts = redissonClient.getScoredSortedSet(SORTED_HOSTS_KEY);
 
         // 1. 결과를 담을 비어있는 List를 먼저 생성합니다.
@@ -146,7 +149,9 @@ public class HostService {
         // 2. revRangeTo 메소드를 호출하여 위에서 만든 List에 결과를 채워넣습니다.
         sortedHosts.revRangeTo(latestHostIds.toString(), 0, count - 1);
 
-        if (latestHostIds.isEmpty()) return List.of();
+        if (latestHostIds.isEmpty()) {
+            return List.of();
+        }
 
         List<Host> hosts = hostRepository.findAllById(latestHostIds);
 
