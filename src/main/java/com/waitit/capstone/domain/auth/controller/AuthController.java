@@ -3,6 +3,8 @@ package com.waitit.capstone.domain.auth.controller;
 import java.util.*;
 import com.waitit.capstone.domain.auth.service.AuthService;
 import com.waitit.capstone.domain.auth.dto.JoinRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Slf4j
+@Tag(name = "인증 API", description = "사용자 인증 관련 API")
 public class AuthController {
 
     private final AuthService authService;
@@ -21,6 +24,7 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @Operation(summary = "회원가입", description = "사용자가 회원가입을 요청합니다.")
     @PostMapping("/join")
     public ResponseEntity<?> join(@Valid @RequestBody JoinRequest joinRequest){
         log.info("회원가입 요청: {}", joinRequest.getName());

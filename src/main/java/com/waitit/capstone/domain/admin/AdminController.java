@@ -3,16 +3,16 @@ package com.waitit.capstone.domain.admin;
 import com.waitit.capstone.domain.admin.dto.AllHostRequest;
 import com.waitit.capstone.domain.admin.dto.AllUserRequest;
 import com.waitit.capstone.domain.admin.dto.HostSummaryDto;
-import com.waitit.capstone.domain.admin.dto.MainBannerResponse;
 import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
 import com.waitit.capstone.domain.image.AllImageResponse;
 import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.global.util.PageResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,11 +36,13 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/admin")
+@Tag(name = "관리자 API", description = "관리자 기능 관련 API (관리자 권한 필요)")
 public class AdminController {
 
     private final AdminService adminService;
     private final ImageService imageService;
-    //모든 회원 조회
+
+    @Operation(summary = "모든 회원 조회", description = "관리자가 모든 회원을 페이지별로 조회합니다.")
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PageResponse<AllUserRequest>> getAll(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
@@ -49,7 +51,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    //회원 정보 수정
+    @Operation(summary = "회원 정보 수정", description = "관리자가 특정 회원의 정보를 수정합니다.")
     @PatchMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(@RequestBody UpdatedRequest request){
@@ -61,10 +63,9 @@ public class AdminController {
         return ResponseEntity.ok(map);
     }
 
-    //회원 삭제
+    @Operation(summary = "회원 삭제", description = "관리자가 특정 회원을 삭제합니다.")
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-
     public ResponseEntity<?> deleteUser(@PathVariable Long id){
         adminService.deleteMember(id);
 
@@ -74,7 +75,7 @@ public class AdminController {
         return ResponseEntity.ok(map);
     }
 
-    //이벤트 배너 등록
+    @Operation(summary = "이벤트 배너 등록", description = "관리자가 이벤트 배너 이미지를 업로드합니다.")
     @PostMapping(value = "/event/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> uploadEventBanner(@RequestParam("images") List<MultipartFile> eventImages){
@@ -82,7 +83,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body("이미지 저장 완료");
     }
 
-    //이벤트 배너 조회
+    @Operation(summary = "이벤트 배너 목록 조회", description = "모든 이벤트 배너를 페이지별로 조회합니다.")
     @GetMapping("/event")
     public ResponseEntity<PageResponse<AllImageResponse>> getAllImages(
             @RequestParam(defaultValue = "1") int page,
@@ -91,14 +92,14 @@ public class AdminController {
         PageResponse<AllImageResponse> images = imageService.getAllImage(pageable);
         return ResponseEntity.ok(images);
     }
-    //이벤트 배너 삭제
+    @Operation(summary = "이벤트 배너 삭제", description = "관리자가 특정 이벤트 배너를 삭제합니다.")
     @DeleteMapping("/event/{id}")
     public ResponseEntity<?> deleteEvent(@PathVariable Long id){
         adminService.deleteImage(id);
         return ResponseEntity.status(HttpStatus.OK).body("이미지 삭제 완료");
     }
 
-    //메인 이벤트 배너 결정 기능
+    @Operation(summary = "메인 이벤트 배너 선택", description = "관리자가 메인 화면에 표시할 이벤트 배너를 선택합니다.")
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/event/select")
     public ResponseEntity<?> selectEventBanner(@RequestParam Long imgId,@RequestParam int number){
@@ -106,14 +107,14 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body("이미지 이벤트 등록 완료");
     }
 
-    //대기열 현황 조회
+    @Operation(summary = "활성 대기열 현황 조회", description = "관리자가 현재 활성화된 모든 대기열의 요약 정보를 조회합니다.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/active")
     public ResponseEntity<?> getAllQueue(){
         List<HostSummaryDto> list = adminService.getActiveHostSummaries();
         return ResponseEntity.ok(list);
     }
-    //세부 대기열 내역 조회
+    @Operation(summary = "호스트별 세부 대기열 내역 조회", description = "관리자가 특정 호스트의 세부 대기열 내역을 조회합니다.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/active/{hostId}")
     public ResponseEntity<?> findQueueByHostId(@PathVariable String hostId){
@@ -121,7 +122,7 @@ public class AdminController {
         return ResponseEntity.ok(list);
     }
 
-    //모든 호스트 조회
+    @Operation(summary = "모든 호스트 조회", description = "관리자가 모든 호스트를 페이지별로 조회합니다.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/hosts")
     public ResponseEntity<PageResponse<AllHostRequest>> getAllHost(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size){
