@@ -20,12 +20,12 @@ public class RecommendationController {
     private final RecommendationService recommendationService;
 
     @GetMapping
-    @Operation(summary = "주변 장소 추천", description = "사용자의 대기 상태와 위치에 따라 주변 장소를 추천합니다. 대기 중이면 대기 시간에 맞는 장소를, 대기 중이 아니면 주변 대기열이 있는 가게를 추천합니다.")
+    @Operation(summary = "주변 장소 추천", description = "사용자의 대기 상태와 위치에 따라 주변 장소를 추천합니다. 대기 중이면 대기 시간에 맞는 장소를, 대기 중이 아니면 주변 가게 목록을 추천합니다.")
     public ResponseEntity<RecommendationResponse> getRecommendations(
             @RequestParam String phoneNumber,
             @RequestParam double latitude,
             @RequestParam double longitude) {
-
+        
         RecommendationResponse result = recommendationService.recommend(phoneNumber, latitude, longitude);
         return ResponseEntity.ok(result);
     }
