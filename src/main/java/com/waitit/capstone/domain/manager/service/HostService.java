@@ -104,7 +104,7 @@ public class HostService {
         List<Host> hosts = hostRepository.findAllById(activeIds);
 
         return hosts.stream().map(host -> {
-            String imgUrl = host.getImages().stream().findFirst().map(HostImage::getImgPath).orElse(null);
+            String imgUrl = host.getImages().stream().findFirst().map(HostImage::getImagePath).orElse(null);
 
             // 대기열 크기를 RScoredSortedSet의 size()로 조회
             int waiting = redissonClient.getScoredSortedSet(getWaitListKey(host.getId())).size();
@@ -161,7 +161,7 @@ public class HostService {
                 .toList();
 
         return sorted.stream().map(host -> {
-            String imgUrl = host.getImages().stream().findFirst().map(HostImage::getImgPath).orElse(null);
+            String imgUrl = host.getImages().stream().findFirst().map(HostImage::getImagePath).orElse(null);
             int waiting = redissonClient.getScoredSortedSet(getWaitListKey(host.getId())).size();
             return SessionListDto.builder()
                     .hostId(host.getId())
