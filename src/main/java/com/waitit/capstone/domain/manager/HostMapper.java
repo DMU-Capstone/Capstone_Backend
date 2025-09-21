@@ -20,7 +20,6 @@ public interface HostMapper {
     @Mapping(target = "address", ignore = true)
     @Mapping(target = "station", ignore = true)
     @Mapping(target = "distance", ignore = true)
-    @Mapping(target = "active", ignore = true)
     Host toEntity(HostRequest request);
 
     List<WaitingListDto> queueToWaiting(List<QueueDto> list);
