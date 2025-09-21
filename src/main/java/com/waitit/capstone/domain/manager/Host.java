@@ -42,6 +42,9 @@ public class Host {
 
     private String hostPhoneNumber;
 
+    private String address; 
+    private String station; 
+    private String distance; 
     private Double latitude;
     private Double longitude;
 
@@ -65,5 +68,9 @@ public class Host {
 
     public CoordinateDto getLatLong(){
         return new CoordinateDto(this.latitude,this.longitude);
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
     }
 }
