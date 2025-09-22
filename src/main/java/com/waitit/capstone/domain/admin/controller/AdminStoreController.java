@@ -27,7 +27,7 @@ public class AdminStoreController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")//
     @Operation(summary = "매장 상세 조회 (관리자용)", description = "관리자가 특정 ID를 가진 매장의 상세 정보를 조회합니다.")
     public ResponseEntity<StoreDetailResponse> getStoreDetails(@PathVariable Long id) {
         StoreDetailResponse storeDetails = storeService.getStoreDetails(id);
