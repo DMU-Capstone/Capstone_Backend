@@ -1,12 +1,6 @@
 package com.waitit.capstone.domain.member.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -15,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "Member")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -25,32 +20,37 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "nickname")
     private String nickname;
+
+    @Column(name = "password")
     private String password;
+
+    @Column(name = "phone_number")
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     private Gender gender;
+
     @Enumerated(EnumType.STRING)
+    @Column(name = "role")
     private Role role;
 
-    private LocalDateTime create_time;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        this.create_time = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
-    @Builder
-    public Member(String name, String nickName, String password, String phoneNumber, Gender gender, Role role) {
-        this.name = name;
-        this.nickname = nickName;
-        this.password = password;
-        this.phoneNumber = phoneNumber;
-        this.gender = gender;
-        this.role = Role.USER;
-    }
+    // Builder가 모든 필드를 다루므로, 특정 필드만 받는 빌더는 삭제하거나 주석 처리하는 것이 혼동을 줄입니다.
+    // @Builder
+    // public Member(String name, String nickName, String password, String phoneNumber, Gender gender, Role role) { ... }
 
     public void updateProfile(String name, String nickname, String password) {
         this.name = name;

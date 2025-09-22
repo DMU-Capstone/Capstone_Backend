@@ -1,36 +1,37 @@
 package com.waitit.capstone.domain.main.search;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "Keyword")
 @AllArgsConstructor
 @NoArgsConstructor
 public class Keyword {
 
-    public Keyword(String search_term,String user_ip) {
-        this.search_term = search_term;
-        this.user_ip = user_ip;
+    public Keyword(String searchTerm, String userIp) {
+        this.searchTerm = searchTerm;
+        this.userIp = userIp;
     }
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDateTime searchDate;
-    private String search_term;
-    private String user_ip;
+    @Column(name = "searched_at")
+    private LocalDateTime searchedAt;
+
+    @Column(name = "search_term")
+    private String searchTerm;
+
+    @Column(name = "user_ip")
+    private String userIp;
 
     @PrePersist
     protected void onCreate() {
-        this.searchDate = LocalDateTime.now();
+        this.searchedAt = LocalDateTime.now();
     }
-
-
 }
