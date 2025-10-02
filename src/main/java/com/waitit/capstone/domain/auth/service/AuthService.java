@@ -27,7 +27,7 @@ public class AuthService {
                 .password(bCryptPasswordEncoder.encode(joinRequest.getPassword()))
                 .phoneNumber(joinRequest.getPhoneNumber())
                 .gender(joinRequest.getGender())
-                .role(Role.USER)
+                .role(joinRequest.getRole()) // Role.USER -> joinRequest.getRole()로 수정
                 .build();
 
         memberRepository.save(member);
