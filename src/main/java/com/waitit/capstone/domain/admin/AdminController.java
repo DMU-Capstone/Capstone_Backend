@@ -1,9 +1,6 @@
 package com.waitit.capstone.domain.admin;
 
-import com.waitit.capstone.domain.admin.dto.AllHostRequest;
-import com.waitit.capstone.domain.admin.dto.AllUserRequest;
-import com.waitit.capstone.domain.admin.dto.HostSummaryDto;
-import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
+import com.waitit.capstone.domain.admin.dto.*; // DTO 임포트
 import com.waitit.capstone.domain.image.AllImageResponse;
 import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
@@ -21,15 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -42,6 +31,7 @@ public class AdminController {
     private final AdminService adminService;
     private final ImageService imageService;
 
+    // ... (기존 회원 관련 API 생략)
     @Operation(summary = "모든 회원 조회", description = "관리자가 모든 회원을 페이지별로 조회합니다.")
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
@@ -56,10 +46,8 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(@RequestBody UpdatedRequest request){
         adminService.updateMember(request);
-
         Map<String,String> map = new HashMap<>();
         map.put("message","회원정보가 수정되었습니다.");
-
         return ResponseEntity.ok(map);
     }
 
@@ -68,12 +56,11 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id){
         adminService.deleteMember(id);
-
         Map<String,String> map = new HashMap<>();
         map.put("message","회원이 삭제되었습니다.");
-
         return ResponseEntity.ok(map);
     }
+
 
     @Operation(summary = "이벤트 배너 등록", description = "관리자가 이벤트 배너 이미지를 업로드합니다.")
     @PostMapping(value = "/event/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -92,6 +79,7 @@ public class AdminController {
         PageResponse<AllImageResponse> images = imageService.getAllImage(pageable);
         return ResponseEntity.ok(images);
     }
+
     @Operation(summary = "이벤트 배너 삭제", description = "관리자가 특정 이벤트 배너를 삭제합니다.")
     @DeleteMapping("/event/{id}")
     public ResponseEntity<?> deleteEvent(@PathVariable Long id){
@@ -99,14 +87,15 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body("이미지 삭제 완료");
     }
 
-    @Operation(summary = "메인 이벤트 배너 선택", description = "관리자가 메인 화면에 표시할 이벤트 배너를 선택합니다.")
+    @Operation(summary = "메인 배너 상태 변경 (ON/OFF)", description = "관리자가 메인 화면에 표시할 배너를 활성화(ON) 또는 비활성화(OFF)합니다.")
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/event/select")
-    public ResponseEntity<?> selectEventBanner(@RequestParam Long imgId,@RequestParam int number){
-        adminService.selectBanner(imgId,number);
-        return ResponseEntity.status(HttpStatus.OK).body("이미지 이벤트 등록 완료");
+    @PostMapping("/banners/status")
+    public ResponseEntity<Void> updateBannerStatus(@RequestBody UpdateBannerStatusRequest request) {
+        adminService.updateBannerStatus(request);
+        return ResponseEntity.ok().build();
     }
 
+    // ... (기존 대기열 및 호스트 관련 API 생략)
     @Operation(summary = "활성 대기열 현황 조회", description = "관리자가 현재 활성화된 모든 대기열의 요약 정보를 조회합니다.")
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/active")

@@ -1,10 +1,6 @@
 package com.waitit.capstone.domain.admin;
 
-import com.waitit.capstone.domain.admin.dto.AllHostRequest;
-import com.waitit.capstone.domain.admin.dto.AllUserRequest;
-import com.waitit.capstone.domain.admin.dto.HostSummaryDto;
-import com.waitit.capstone.domain.admin.dto.UpdatedRequest;
-
+import com.waitit.capstone.domain.admin.dto.*; // DTO 임포트
 import com.waitit.capstone.domain.image.ImageService;
 import com.waitit.capstone.domain.image.repository.EventImageRepository;
 import com.waitit.capstone.domain.manager.Host;
@@ -40,26 +36,22 @@ public class AdminService {
     private final EventImageRepository eventImageRepository;
     private final RedissonClient redissonClient;
     private static final String ACTIVE_HOSTS_KEY = "active:hosts";
+    private static final String MAIN_BANNERS_KEY = "main_banners"; // Redis 키 이름 변경
 
-
-    //모든 유저를 조회후 페이징
+    // ... (getAllUser, updateMember, deleteMember 생략)
     public PageResponse<AllUserRequest> getAllUser(Pageable pageable) {
         Page<Member> members = memberRepository.findAll(pageable);
         Page<AllUserRequest> allUserRequests = members.map(adminMapper::toAllUserRequest);
-
         return new PageResponse<>(allUserRequests);
     }
 
-    //유저 리퀘스트 바디를 받아서 멤버 수정후 저장
     public void updateMember(UpdatedRequest request) {
         Long memberId = Long.parseLong(request.getId());
         Member member = memberRepository.findMemberById(memberId);
-
         member.updateProfile(request.getName(), request.getName(), request.getPassword());
         memberRepository.save(member);
     }
 
-    //아이디로 멤버삭제
     public void deleteMember(Long id) {
         memberRepository.deleteById(id);
     }
@@ -69,27 +61,33 @@ public class AdminService {
         imageService.uploadEvent(images);
     }
 
-    //이벤트 배너 메인 등록
-    public void selectBanner(Long imgId, int number) {
-        //레디스에 imgId 받은걸 db 패스를 찾음
-        String img = imageService.getImgPath(imgId);
-        String redisKey = "main_banner";
-        // 레디스 리스트의  number 인덱스에 등록
-        redisTemplate.opsForList().set(redisKey, number, img);
+    /**
+     * 메인 배너의 상태(ON/OFF)를 변경합니다.
+     * @param request 배너 ID와 활성화 상태(active)를 담은 요청
+     */
+    public void updateBannerStatus(UpdateBannerStatusRequest request) {
+        // 1. imgId로 DB에서 이미지 경로를 조회합니다.
+        String imgPath = imageService.getImgPath(request.getImgId());
+
+        // 2. 요청의 active 상태에 따라 Redis SET에 추가 또는 삭제합니다.
+        if (request.isActive()) {
+            // ON: SET에 이미지 경로를 추가합니다.
+            redisTemplate.opsForSet().add(MAIN_BANNERS_KEY, imgPath);
+        } else {
+            // OFF: SET에서 이미지 경로를 제거합니다.
+            redisTemplate.opsForSet().remove(MAIN_BANNERS_KEY, imgPath);
+        }
     }
 
-    //모든 대기열 내역 조회
+    // ... (기존 getAllHost, getActiveHostSummaries 등 생략)
     public PageResponse<AllHostRequest> getAllHost(Pageable pageable) {
         Page<Host> hosts = hostRepository.findAll(pageable);
         Page<AllHostRequest> allHostRequests = hosts.map(adminMapper::toAllHostRequest);
-
         return new PageResponse<>(allHostRequests);
     }
 
-    //현재 대기열 목록 조회
     public List<HostSummaryDto> getActiveHostSummaries() {
         Set<String> ids = redisTemplate.opsForSet().members("active:hosts");
-
         return ids.stream()
                 .map(Long::parseLong)
                 .map(hostRepository::findById)
@@ -104,7 +102,7 @@ public class AdminService {
                 })
                 .toList();
     }
-    //각 대기열 세부 목록 조회
+
     public List<QueueDto> getQueueDtoByHostId(String hostId) {
         RList<QueueDto> queue = redissonClient.getList("waitList:" + hostId);
         return queue.readAll();
