@@ -11,17 +11,21 @@ import java.util.List;
 
 public interface WaitingHistoryRepository extends JpaRepository<WaitingHistory, Long> {
 
-    /**
-     * 특정 기간 동안의 시간대별 평균 대기 인원을 계산합니다.
-     */
-    @Query("SELECT new com.waitit.capstone.domain.dashboard.dto.HourlyWaitingStats(FUNCTION('HOUR', w.recordedAt), AVG(w.queueSize)) " +
-           "FROM WaitingHistory w " +
-           "WHERE w.host.id = :hostId AND w.recordedAt BETWEEN :startDate AND :endDate " +
-           "GROUP BY FUNCTION('HOUR', w.recordedAt) " +
-           "ORDER BY FUNCTION('HOUR', w.recordedAt)")
+    @Query("""
+SELECT new com.waitit.capstone.domain.dashboard.dto.HourlyWaitingStats(
+  HOUR(w.recordedAt),
+  AVG(w.queueSize)
+)
+FROM WaitingHistory w
+WHERE w.host.id = :hostId
+  AND w.recordedAt BETWEEN :startDate AND :endDate
+GROUP BY HOUR(w.recordedAt)
+ORDER BY HOUR(w.recordedAt)
+""")
     List<HourlyWaitingStats> findHourlyAverageQueueSize(
             @Param("hostId") Long hostId,
             @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate);
+            @Param("endDate") LocalDateTime endDate
+    );
 
 }
