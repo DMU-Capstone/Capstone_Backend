@@ -96,6 +96,7 @@ public class StoreService {
                 .id(host.getId())
                 .name(host.getHostName())
                 .description(host.getDescription())
+                .keyword(host.getKeyword()) // keyword 매핑 추가
                 .images(imageUrls)
                 .location(locationDto)
                 .operating_hours(operatingHoursDto)
