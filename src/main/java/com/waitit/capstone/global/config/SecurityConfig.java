@@ -1,5 +1,6 @@
 package com.waitit.capstone.global.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper; // ObjectMapper 임포트 추가
 import com.waitit.capstone.domain.auth.service.CustomOAuth2UserService;
 import com.waitit.capstone.domain.auth.service.RefreshTokenService;
 import com.waitit.capstone.global.security.jwt.CustomLogoutFilter;
@@ -33,25 +34,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @AllArgsConstructor
 public class SecurityConfig {
 
-    //AuthenticationManager가 인자로 받을 AuthenticationConfiguraion 객체 생성자 주입
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenResolver refreshTokenResolver;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final ObjectMapper objectMapper; // ObjectMapper 주입 추가
 
-
-    //AuthenticationManager Bean 등록
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-    @Bean //비밀번호 암호화 객체 생성
+    @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
     }
 
-    @Bean //cors 설정 빈
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of("*"));
@@ -68,41 +67,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-        //cors 설정
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-        //csrf disable
         http.csrf(AbstractHttpConfigurer::disable);
-
-        //form 로그인 방식 disable
         http.formLogin(AbstractHttpConfigurer::disable);
-
-        //http basic 인증방식 disable
         http.httpBasic(AbstractHttpConfigurer::disable);
 
-        //oauth2
         http
                 .oauth2Login((oauth2)->oauth2
                         .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService)));
 
-        //경로별 인가작업 -> 일단 작업을 위해 모두 허용
-        /*.authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
-                        .anyRequest().authenticated());
-         */
         http.authorizeHttpRequests(auth->auth.anyRequest().permitAll());
 
-        //JWTFilter 등록
         http.addFilterAfter(new JWTFilter(jwtUtil), LoginFilter.class);
 
-        //필터 추가 LoginFilter()는 인자를 받음 (AuthenticationManager() 메소드에 authenticationConfiguration 객체를 넣어야 함)
-        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil,refreshTokenService), UsernamePasswordAuthenticationFilter.class);
+        // LoginFilter 생성자에 objectMapper 추가
+        http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenService, objectMapper), UsernamePasswordAuthenticationFilter.class);
 
-        //로그아웃 필터 추가
         http.addFilterBefore(new CustomLogoutFilter(jwtUtil,refreshTokenService,refreshTokenResolver), LogoutFilter.class);
 
-        //세션을 아예 안만들도록 설정 -> 로그인해도 서버에 세션객체 저장X
         http.sessionManagement((session)->session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
