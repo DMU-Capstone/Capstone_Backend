@@ -1,6 +1,5 @@
 package com.waitit.capstone.domain.dashboard.dto;
 
-
 import lombok.Getter;
 
 @Getter
@@ -10,10 +9,11 @@ public class HourlyMetricsQueryResult {
     private final Long enteredCount;
     private final Long cancelledCount;
 
-    public HourlyMetricsQueryResult(Number hour, Number totalCount, Number enteredCount, Number cancelledCount) {
+
+    public HourlyMetricsQueryResult(Integer hour, Long totalCount, Long enteredCount, Long cancelledCount) {
         this.hour = hour == null ? null : hour.longValue();
-        this.totalCount = totalCount == null ? null : totalCount.longValue();
-        this.enteredCount = enteredCount == null ? null : enteredCount.longValue();
-        this.cancelledCount = cancelledCount == null ? null : cancelledCount.longValue();
+        this.totalCount = totalCount;
+        this.enteredCount = enteredCount;
+        this.cancelledCount = cancelledCount;
     }
 }
