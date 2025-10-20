@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class HourlyMetricsQueryResult {
-    private int hour;
-    private long totalCount;
-    private long enteredCount;
-    private long cancelledCount;
+    private Integer hour;
+    private Long totalCount;
+    private Long enteredCount;
+    private Long cancelledCount;
 }
