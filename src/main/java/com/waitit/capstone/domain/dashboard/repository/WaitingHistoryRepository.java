@@ -1,31 +1,8 @@
 package com.waitit.capstone.domain.dashboard.repository;
 
-import com.waitit.capstone.domain.dashboard.dto.HourlyWaitingStats;
-import com.waitit.capstone.domain.dashboard.entity.WaitingHistory;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-public interface WaitingHistoryRepository extends JpaRepository<WaitingHistory, Long> {
-
-    @Query("""
-SELECT new com.waitit.capstone.domain.dashboard.dto.HourlyWaitingStats(
-  HOUR(w.recordedAt),
-  AVG(w.queueSize)
-)
-FROM WaitingHistory w
-WHERE w.host.id = :hostId
-  AND w.recordedAt BETWEEN :startDate AND :endDate
-GROUP BY HOUR(w.recordedAt)
-ORDER BY HOUR(w.recordedAt)
-""")
-    List<HourlyWaitingStats> findHourlyAverageQueueSize(
-            @Param("hostId") Long hostId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
+/**
+ * V2 대시보드 기능으로 대체되어 더 이상 사용되지 않는 리포지토리입니다.
+ * Bean 생성 충돌을 막기 위해 내용을 비활성화합니다.
+ */
+public interface WaitingHistoryRepository {
 }

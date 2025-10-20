@@ -1,12 +1,12 @@
 package com.waitit.capstone.domain.dashboard.dto;
 
 import com.waitit.capstone.domain.dashboard.entity.QueueLog;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@Builder
-public class CancelReasonStatsDto {
+@AllArgsConstructor
+public class CancelReasonCountDto {
     private QueueLog.Reason reason;
-    private double percentage;
+    private long count;
 }
