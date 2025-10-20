@@ -3,7 +3,7 @@ package com.waitit.capstone.domain.dashboard.service;
 import com.waitit.capstone.domain.dashboard.dto.*;
 import com.waitit.capstone.domain.dashboard.entity.QueueLog;
 import com.waitit.capstone.domain.dashboard.entity.Review;
-import com.waitit.capstone.domain.dashboard.repository.QueueLogRepository;
+import com.waitit.capstone.domain.dashboard.repository.QueueLogRepositoryV2; // V2로 변경
 import com.waitit.capstone.domain.dashboard.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,18 +22,14 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardServiceV2 {
 
-    private final QueueLogRepository queueLogRepository;
+    private final QueueLogRepositoryV2 queueLogRepository; // V2로 변경
     private final ReviewRepository reviewRepository;
 
-    /**
-     * 1. 전체 스토어 지표 조회
-     */
     public StoreMetricsResponse getStoreMetrics(Long storeId, String dateRange) {
         String[] dates = dateRange.split("~");
         LocalDateTime startDate = LocalDate.parse(dates[0], DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
         LocalDateTime endDate = LocalDate.parse(dates[1], DateTimeFormatter.ISO_LOCAL_DATE).atTime(LocalTime.MAX);
 
-        // 1. 전체 요약 통계 계산
         long totalWaitlistCount = queueLogRepository.countByHostIdAndRegisteredAtBetween(storeId, startDate, endDate);
         long totalActualUsers = queueLogRepository.countByHostIdAndStatusAndEnteredAtBetween(storeId, QueueLog.Status.ENTERED, startDate, endDate);
         long totalDropouts = queueLogRepository.countByHostIdAndStatusAndCancelledAtBetween(storeId, QueueLog.Status.CANCELLED, startDate, endDate);
@@ -48,49 +44,50 @@ public class DashboardServiceV2 {
                 .averageWaitTimeSeconds(avgWaitTime != null ? avgWaitTime : 0.0)
                 .build();
 
-        // 2. 시간대별 세부 통계 계산
-        List<HourlyMetricsQueryResult> hourlyResults = queueLogRepository.findHourlyMetrics(storeId, startDate, endDate);
+        List<Object[]> hourlyResults = queueLogRepository.findHourlyMetricsRaw(storeId, startDate, endDate);
         List<HourlyStoreMetricsDto> hourlyData = hourlyResults.stream()
-                .map(result -> HourlyStoreMetricsDto.builder()
-                        .timeSlot(String.format("%02d:00 - %02d:00", result.getHour(), result.getHour() + 1))
-                        .waitlistCount(result.getTotalCount())
-                        .actualUsers(result.getEnteredCount())
-                        .dropouts(result.getCancelledCount())
-                        .build())
+                .map(result -> {
+                    Integer hour = ((Number) result[0]).intValue();
+                    long totalCount = ((Number) result[1]).longValue();
+                    long enteredCount = ((Number) result[2]).longValue();
+                    long cancelledCount = ((Number) result[3]).longValue();
+                    return HourlyStoreMetricsDto.builder()
+                            .timeSlot(String.format("%02d:00 - %02d:00", hour, hour + 1))
+                            .waitlistCount(totalCount)
+                            .actualUsers(enteredCount)
+                            .dropouts(cancelledCount)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
-        // 3. 최종 응답 조합
         return StoreMetricsResponse.builder()
                 .summary(summary)
                 .hourlyData(hourlyData)
                 .build();
     }
 
-    /**
-     * 4. 예상 대기인원 추이 조회
-     */
     public List<WaitlistTrendHourlyData> getWaitlistTrend(Long storeId, String dateRange) {
         String[] dates = dateRange.split("~");
         LocalDateTime startDate = LocalDate.parse(dates[0], DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
         LocalDateTime endDate = LocalDate.parse(dates[1], DateTimeFormatter.ISO_LOCAL_DATE).atTime(LocalTime.MAX);
 
-        List<HourlyMetricsQueryResult> hourlyResults = queueLogRepository.findHourlyMetrics(storeId, startDate, endDate);
+        List<Object[]> hourlyResults = queueLogRepository.findHourlyMetricsRaw(storeId, startDate, endDate);
 
         return hourlyResults.stream()
                 .map(result -> {
-                    double utilizationRate = (result.getTotalCount() > 0) ? (double) result.getEnteredCount() / result.getTotalCount() : 0.0;
+                    Integer hour = ((Number) result[0]).intValue();
+                    long totalCount = ((Number) result[1]).longValue();
+                    long enteredCount = ((Number) result[2]).longValue();
+                    double utilizationRate = (totalCount > 0) ? (double) enteredCount / totalCount : 0.0;
                     return WaitlistTrendHourlyData.builder()
-                            .timeSlot(String.format("%02d:00 - %02d:00", result.getHour(), result.getHour() + 1))
-                            .waitlistCount(result.getTotalCount())
+                            .timeSlot(String.format("%02d:00 - %02d:00", hour, hour + 1))
+                            .waitlistCount(totalCount)
                             .utilizationRate(utilizationRate)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 3. 재방문율 조회
-     */
     public ReturnRateResponse getReturnRate(Long storeId, String dateRange) {
         String[] dates = dateRange.split("~");
         LocalDateTime startDate = LocalDate.parse(dates[0], DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
@@ -118,16 +115,12 @@ public class DashboardServiceV2 {
                 .build();
     }
 
-    /**
-     * 5. 리뷰 및 대기 취소 사유 조회
-     */
     public ReviewAndCancelStatsResponse getReviewAndCancelStats(Long storeId, String dateRange, Integer ratingMin) {
         String[] dates = dateRange.split("~");
         LocalDateTime startDate = LocalDate.parse(dates[0], DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
         LocalDateTime endDate = LocalDate.parse(dates[1], DateTimeFormatter.ISO_LOCAL_DATE).atTime(LocalTime.MAX);
         int minRating = (ratingMin != null) ? ratingMin : 0;
 
-        // 1. 취소 사유 통계 계산
         List<CancelReasonCountDto> reasonCounts = queueLogRepository.findCancelReasonStats(storeId, startDate, endDate);
         long totalCancellations = reasonCounts.stream().mapToLong(CancelReasonCountDto::getCount).sum();
 
@@ -141,7 +134,6 @@ public class DashboardServiceV2 {
                 })
                 .collect(Collectors.toList());
 
-        // 2. 리뷰 목록 조회
         List<Review> reviewEntities = reviewRepository.findReviews(storeId, startDate, endDate, minRating);
         List<ReviewSummaryDto> reviews = reviewEntities.stream()
                 .map(ReviewSummaryDto::from)
