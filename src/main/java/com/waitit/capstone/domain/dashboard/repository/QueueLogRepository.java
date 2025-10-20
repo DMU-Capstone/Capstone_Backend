@@ -19,10 +19,6 @@ public interface QueueLogRepository extends JpaRepository<QueueLog, Long> {
 
     long countByHostIdAndStatusAndCancelledAtBetween(Long hostId, QueueLog.Status status, LocalDateTime startDate, LocalDateTime endDate);
 
-    /**
-     * [수정] JPQL이 아닌 Native SQL을 사용하도록 변경 (nativeQuery = true)
-     * - JPQL의 q.registeredAt -> SQL의 q.registered_at 으로 컬럼명 변경
-     */
     @Query(value = "SELECT AVG(TIMESTAMPDIFF(SECOND, q.registered_at, q.entered_at)) FROM queue_log q " +
                    "WHERE q.host_id = :hostId AND q.status = 'ENTERED' AND q.entered_at BETWEEN :startDate AND :endDate",
            nativeQuery = true)
