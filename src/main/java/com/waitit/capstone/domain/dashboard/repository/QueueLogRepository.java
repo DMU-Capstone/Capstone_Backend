@@ -27,16 +27,18 @@ public interface QueueLogRepository extends JpaRepository<QueueLog, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT new com.waitit.capstone.domain.dashboard.dto.HourlyMetricsQueryResult( " +
-           "    FUNCTION('HOUR', q.registeredAt), " +
-           "    COUNT(q.id), " +
-           "    SUM(CASE WHEN q.status = 'ENTERED' THEN 1 ELSE 0 END), " +
-           "    SUM(CASE WHEN q.status = 'CANCELLED' THEN 1 ELSE 0 END) " +
-           ") " +
-           "FROM QueueLog q " +
-           "WHERE q.host.id = :hostId AND q.registeredAt BETWEEN :startDate AND :endDate " +
-           "GROUP BY FUNCTION('HOUR', q.registeredAt) " +
-           "ORDER BY FUNCTION('HOUR', q.registeredAt)")
+    @Query("""
+    SELECT new com.waitit.capstone.domain.dashboard.dto.HourlyMetricsQueryResult(
+        CAST(FUNCTION('HOUR', q.registeredAt) AS integer),
+        COUNT(q.id),
+        SUM(CASE WHEN q.status = 'ENTERED' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN q.status = 'CANCELLED' THEN 1 ELSE 0 END)
+    )
+    FROM QueueLog q
+    WHERE q.host.id = :hostId AND q.registeredAt BETWEEN :startDate AND :endDate
+    GROUP BY FUNCTION('HOUR', q.registeredAt)
+    ORDER BY FUNCTION('HOUR', q.registeredAt)
+""")
     List<HourlyMetricsQueryResult> findHourlyMetrics(
             @Param("hostId") Long hostId,
             @Param("startDate") LocalDateTime startDate,
