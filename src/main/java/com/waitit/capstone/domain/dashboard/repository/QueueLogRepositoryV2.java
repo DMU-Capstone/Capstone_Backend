@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
-// 인터페이스 이름을 V2로 변경
 public interface QueueLogRepositoryV2 extends JpaRepository<QueueLog, Long> {
 
     long countByHostIdAndRegisteredAtBetween(Long hostId, LocalDateTime startDate, LocalDateTime endDate);
@@ -60,6 +59,24 @@ public interface QueueLogRepositoryV2 extends JpaRepository<QueueLog, Long> {
            "WHERE q.host.id = :hostId AND q.status = 'CANCELLED' AND q.cancelledAt BETWEEN :startDate AND :endDate " +
            "GROUP BY q.reason")
     List<CancelReasonCountDto> findCancelReasonStats(
+            @Param("hostId") Long hostId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    /**
+     * [피크 분석] 시간대별 피크 분석 통계를 네이티브 쿼리로 조회합니다.
+     */
+    @Query(value = "SELECT " +
+                   "    HOUR(q.registered_at) as hour, " +
+                   "    COUNT(q.id) as totalCount, " +
+                   "    SUM(CASE WHEN q.status = 'ENTERED' THEN 1 ELSE 0 END) as enteredCount, " +
+                   "    SUM(CASE WHEN q.status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelledCount, " +
+                   "    AVG(CASE WHEN q.status = 'ENTERED' THEN TIMESTAMPDIFF(SECOND, q.registered_at, q.entered_at) ELSE NULL END) as avgWaitTime " +
+                   "FROM queue_log q " +
+                   "WHERE q.host_id = :hostId AND q.registered_at BETWEEN :startDate AND :endDate " +
+                   "GROUP BY hour ORDER BY hour",
+           nativeQuery = true)
+    List<Object[]> findPeakAnalysisStatsRaw(
             @Param("hostId") Long hostId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);

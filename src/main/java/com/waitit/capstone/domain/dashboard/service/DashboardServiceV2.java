@@ -3,12 +3,13 @@ package com.waitit.capstone.domain.dashboard.service;
 import com.waitit.capstone.domain.dashboard.dto.*;
 import com.waitit.capstone.domain.dashboard.entity.QueueLog;
 import com.waitit.capstone.domain.dashboard.entity.Review;
-import com.waitit.capstone.domain.dashboard.repository.QueueLogRepositoryV2; // V2로 변경
+import com.waitit.capstone.domain.dashboard.repository.QueueLogRepositoryV2;
 import com.waitit.capstone.domain.dashboard.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,8 +23,21 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardServiceV2 {
 
-    private final QueueLogRepositoryV2 queueLogRepository; // V2로 변경
+    private final QueueLogRepositoryV2 queueLogRepository;
     private final ReviewRepository reviewRepository;
+
+    /**
+     * [통합] 모든 대시보드 데이터를 한번에 조회합니다.
+     */
+    public IntegratedDashboardResponse getIntegratedDashboardData(Long storeId, String dateRange) {
+        return IntegratedDashboardResponse.builder()
+                .storeMetrics(getStoreMetrics(storeId, dateRange))
+                .peakAnalysis(getPeakAnalysis(storeId, dateRange))
+                .returnRate(getReturnRate(storeId, dateRange))
+                .waitlistTrend(getWaitlistTrend(storeId, dateRange))
+                .reviewAndCancelStats(getReviewAndCancelStats(storeId, dateRange, 0)) // ratingMin 기본값 0으로 조회
+                .build();
+    }
 
     public StoreMetricsResponse getStoreMetrics(Long storeId, String dateRange) {
         String[] dates = dateRange.split("~");
@@ -143,5 +157,32 @@ public class DashboardServiceV2 {
                 .cancelReasons(cancelReasons)
                 .reviews(reviews)
                 .build();
+    }
+
+    public List<PeakAnalysisDataDto> getPeakAnalysis(Long storeId, String dateRange) {
+        String[] dates = dateRange.split("~");
+        LocalDateTime startDate = LocalDate.parse(dates[0], DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay();
+        LocalDateTime endDate = LocalDate.parse(dates[1], DateTimeFormatter.ISO_LOCAL_DATE).atTime(LocalTime.MAX);
+
+        List<Object[]> results = queueLogRepository.findPeakAnalysisStatsRaw(storeId, startDate, endDate);
+
+        return results.stream()
+                .map(result -> {
+                    Integer hour = ((Number) result[0]).intValue();
+                    long totalCount = ((Number) result[1]).longValue();
+                    long enteredCount = ((Number) result[2]).longValue();
+                    long cancelledCount = ((Number) result[3]).longValue();
+                    Double avgWaitTime = (result[4] != null) ? ((BigDecimal) result[4]).doubleValue() : 0.0;
+
+                    double dropoutRate = (totalCount > 0) ? (double) cancelledCount / totalCount : 0.0;
+
+                    return PeakAnalysisDataDto.builder()
+                            .timeSlot(String.format("%02d:00 - %02d:00", hour, hour + 1))
+                            .customersServed(enteredCount)
+                            .averageProcessingSpeedSeconds(avgWaitTime)
+                            .dropoutRate(dropoutRate)
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }

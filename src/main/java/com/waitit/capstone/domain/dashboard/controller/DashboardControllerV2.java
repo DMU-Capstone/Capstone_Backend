@@ -21,6 +21,18 @@ public class DashboardControllerV2 {
 
     private final DashboardServiceV2 dashboardServiceV2;
 
+    /**
+     * [통합 API] 모든 대시보드 데이터를 한번에 조회합니다.
+     */
+    @GetMapping("/all")
+    @Operation(summary = "(V2) 통합 대시보드 데이터 조회", description = "모든 대시보드 지표를 한 번의 API 호출로 조회합니다.")
+    public ResponseEntity<IntegratedDashboardResponse> getIntegratedDashboardData(
+            @RequestParam Long storeId,
+            @RequestParam String dateRange) {
+        IntegratedDashboardResponse response = dashboardServiceV2.getIntegratedDashboardData(storeId, dateRange);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/store-metrics")
     @Operation(summary = "(V2) 전체 스토어 지표 조회", description = "기간별 전체 및 시간대별 대기, 이용, 이탈 통계를 조회합니다.")
     public ResponseEntity<StoreMetricsResponse> getStoreMetrics(
@@ -30,15 +42,6 @@ public class DashboardControllerV2 {
         return ResponseEntity.ok(metrics);
     }
 
-    @GetMapping("/waitlist-trend")
-    @Operation(summary = "(V2) 예상 대기인원 추이 조회", description = "시간대별 대기열 등록 수와 실제 이용률을 조회합니다.")
-    public ResponseEntity<List<WaitlistTrendHourlyData>> getWaitlistTrend(
-            @RequestParam Long storeId,
-            @RequestParam String dateRange) {
-        List<WaitlistTrendHourlyData> trend = dashboardServiceV2.getWaitlistTrend(storeId, dateRange);
-        return ResponseEntity.ok(trend);
-    }
-
     @GetMapping("/return-rate")
     @Operation(summary = "(V2) 재방문율 조회", description = "기간별 신규 및 재방문 고객 비율을 조회합니다.")
     public ResponseEntity<ReturnRateResponse> getReturnRate(
@@ -46,6 +49,15 @@ public class DashboardControllerV2 {
             @RequestParam String dateRange) {
         ReturnRateResponse rate = dashboardServiceV2.getReturnRate(storeId, dateRange);
         return ResponseEntity.ok(rate);
+    }
+
+    @GetMapping("/waitlist-trend")
+    @Operation(summary = "(V2) 예상 대기인원 추이 조회", description = "시간대별 대기열 등록 수와 실제 이용률을 조회합니다.")
+    public ResponseEntity<List<WaitlistTrendHourlyData>> getWaitlistTrend(
+            @RequestParam Long storeId,
+            @RequestParam String dateRange) {
+        List<WaitlistTrendHourlyData> trend = dashboardServiceV2.getWaitlistTrend(storeId, dateRange);
+        return ResponseEntity.ok(trend);
     }
 
     @GetMapping("/review-and-cancel-stats")
@@ -58,5 +70,12 @@ public class DashboardControllerV2 {
         return ResponseEntity.ok(stats);
     }
 
-    // 피크 분석 API는 추가 구현이 필요합니다.
+    @GetMapping("/peak-analysis")
+    @Operation(summary = "(V2) 피크 분석 조회", description = "시간대별 수용 효율, 평균 처리 속도, 서비스 변동률(이탈률)을 조회합니다.")
+    public ResponseEntity<List<PeakAnalysisDataDto>> getPeakAnalysis(
+            @RequestParam Long storeId,
+            @RequestParam String dateRange) {
+        List<PeakAnalysisDataDto> analysis = dashboardServiceV2.getPeakAnalysis(storeId, dateRange);
+        return ResponseEntity.ok(analysis);
+    }
 }
