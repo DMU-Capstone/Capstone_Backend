@@ -1,79 +1,98 @@
 package com.waitit.capstone.domain.queue.service;
 
 import com.waitit.capstone.domain.queue.dto.QueueDto;
-import lombok.RequiredArgsConstructor;
-import org.redisson.api.BatchOptions;
-import org.redisson.api.BatchOptions.ExecutionMode;
-import org.redisson.api.RBatch;
-import org.redisson.api.RList;
-import org.redisson.api.RScoredSortedSet;
-import org.redisson.api.RSet;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Service
-@RequiredArgsConstructor
 public class QueueService {
-    private final RedissonClient redissonClient;
-    private static final String ACTIVE_HOSTS_KEY = "active:hosts";
-    private static final long POSTPONE_DURATION_MILLIS = 10 * 60 * 1000L;
-    //host 존재 여부 확인
-    private boolean isHostActive(Long hostId) {
-        RSet<Long> activeHosts = redissonClient.getSet(ACTIVE_HOSTS_KEY);
-        return activeHosts.contains(hostId);
-    }
-    private String getWaitListKey(Long hostId) {
-        return "waitList:" + hostId;
-    }
-    private String getPostponeHostsKey(Long hostId) {
-        return "postponeList:" + hostId;
+
+    private final Map<Long, Deque<QueueDto>> waitQueues = new ConcurrentHashMap<>();
+    private final Map<Long, Map<QueueDto, Long>> postponeQueues = new ConcurrentHashMap<>();
+
+    private static final long POSTPONE_DURATION_MILLIS = 10 * 60 * 1000L; // 10분
+
+    public boolean isHostActive(Long hostId) {
+        return waitQueues.containsKey(hostId);
     }
 
+    /**
+     * [수정] 전화번호 중복 등록 방지 로직 추가
+     */
+    public int registerQueue(Long hostId, QueueDto dto) {
+        Deque<QueueDto> queue = waitQueues.computeIfAbsent(hostId, k -> new LinkedList<>());
 
-    public int registerQueue(Long id, QueueDto dto){
-        if (!isHostActive(id)) {
-            throw new IllegalStateException("비활성화된 호스트입니다.");
+        // 중복 검사: 큐에 이미 같은 전화번호가 있는지 확인
+        boolean isDuplicate = queue.stream()
+                .anyMatch(userInQueue -> userInQueue.getPhoneNumber().equals(dto.getPhoneNumber()));
+
+        if (isDuplicate) {
+            throw new IllegalStateException("이미 해당 가게의 대기열에 등록된 전화번호입니다.");
         }
 
-        // 줄 세우기 - Redis 리스트에 DTO 추가
-        RList<QueueDto> queue = redissonClient.getList(getWaitListKey(id));
-
         queue.add(dto);
-
         return queue.size();
     }
 
-    public int getMyPosition(Long hostId, QueueDto myDto){
-        RList<QueueDto> queue = redissonClient.getList(getWaitListKey(hostId));
-        return queue.indexOf(myDto)+1;
+    public int getMyPosition(Long hostId, QueueDto myDto) {
+        Deque<QueueDto> queue = waitQueues.get(hostId);
+        if (queue == null) {
+            return 0; // 대기열 없음
+        }
 
+        int position = 0;
+        for (QueueDto userInQueue : queue) {
+            position++;
+            if (userInQueue.getPhoneNumber().equals(myDto.getPhoneNumber())) {
+                return position;
+            }
+        }
+
+        return 0; // 대기열에 사용자가 없음
     }
 
-    public void deleteMyRegister(Long id, QueueDto dto) {
-        RList<QueueDto> list = redissonClient.getList(getWaitListKey(id));
-        list.remove(dto);
+    public void deleteMyRegister(Long hostId, QueueDto dto) {
+        Deque<QueueDto> queue = waitQueues.get(hostId);
+        if (queue != null) {
+            queue.removeIf(userInQueue -> userInQueue.getPhoneNumber().equals(dto.getPhoneNumber()));
+        }
     }
 
-    public void postpone(Long id, QueueDto dto){
-        // 원자성 보장을 위해 RBatch 사용
-        BatchOptions options = BatchOptions.defaults()
-                .executionMode(ExecutionMode.IN_MEMORY_ATOMIC);
-
-        RBatch batch = redissonClient.createBatch(options);
-
-        // 1. 대기열에서 제거
-        batch.getList(getWaitListKey(id)).removeAsync(dto);
-
-        // 2. 미루기 목록에 추가
-        long expirationTimestamp = System.currentTimeMillis() + POSTPONE_DURATION_MILLIS;
-        batch.getScoredSortedSet(getPostponeHostsKey(id)).addAsync(expirationTimestamp, dto);
-
-        // 두 작업 동시 실행
-        batch.execute();
+    public void postpone(Long hostId, QueueDto dto) {
+        Deque<QueueDto> queue = waitQueues.get(hostId);
+        if (queue == null) {
+            return;
+        }
+        synchronized (queue) {
+            boolean removed = queue.removeIf(userInQueue -> userInQueue.getPhoneNumber().equals(dto.getPhoneNumber()));
+            if (removed) {
+                Map<QueueDto, Long> postponeMap = postponeQueues.computeIfAbsent(hostId, k -> new ConcurrentHashMap<>());
+                long expirationTimestamp = System.currentTimeMillis() + POSTPONE_DURATION_MILLIS;
+                postponeMap.put(dto, expirationTimestamp);
+            }
+        }
     }
 
-    public void deletePostpone(Long id, QueueDto dto){
-        RScoredSortedSet<QueueDto> postponeSet = redissonClient.getScoredSortedSet(getPostponeHostsKey(id));
-        postponeSet.remove(dto);
+    public void deletePostpone(Long hostId, QueueDto dto) {
+        Map<QueueDto, Long> postponeMap = postponeQueues.get(hostId);
+        if (postponeMap != null) {
+            postponeMap.remove(dto);
+        }
+    }
+
+    public void deactivateQueue(Long hostId) {
+        waitQueues.remove(hostId);
+        postponeQueues.remove(hostId);
+    }
+
+    public Set<Long> getActiveHostIds() {
+        return waitQueues.keySet();
+    }
+
+    public List<QueueDto> getQueueByHostId(Long hostId) {
+        Deque<QueueDto> queue = waitQueues.get(hostId);
+        return (queue != null) ? new ArrayList<>(queue) : Collections.emptyList();
     }
 }
