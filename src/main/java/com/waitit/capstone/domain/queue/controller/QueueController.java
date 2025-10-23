@@ -1,8 +1,11 @@
 package com.waitit.capstone.domain.queue.controller;
 
+import com.waitit.capstone.domain.manager.dto.HostResponse;
+import com.waitit.capstone.domain.manager.service.HostService;
 import com.waitit.capstone.domain.queue.QueueMapper;
 import com.waitit.capstone.domain.queue.dto.QueResponseDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
+import com.waitit.capstone.domain.queue.dto.QueueRegistrationResponse;
 import com.waitit.capstone.domain.queue.dto.QueueRequest;
 
 import com.waitit.capstone.domain.queue.service.QueueService;
@@ -21,23 +24,28 @@ import org.springframework.web.bind.annotation.*;
 public class QueueController {
     private final QueueService queueService;
     private final QueueMapper queueMapper;
+    private final HostService hostService; // HostService 주입 추가
 
-    // 롱폴링 관련 코드 모두 삭제
-
-    @Operation(summary = "대기열 등록", description = "특정 가게의 대기열에 사용자를 등록합니다.")
+    @Operation(summary = "대기열 등록", description = "특정 가게의 대기열에 사용자를 등록하고, 등록된 가게의 상세 정보를 함께 반환합니다.")
     @PostMapping("/{id}")
-    public ResponseEntity<?> registerQueue(@PathVariable Long id, @RequestBody QueueRequest queueRequest, HttpServletRequest request){
-        String token = request.getHeader("access");
+    public ResponseEntity<QueueRegistrationResponse> registerQueue(@PathVariable Long id, @RequestBody QueueRequest queueRequest, HttpServletRequest request){
+        // 1. 대기열 등록
         QueueDto dto = queueMapper.requestToDto(queueRequest);
-        int index = queueService.registerQueue(id,dto);
+        int waitingNumber = queueService.registerQueue(id, dto);
 
-        QueResponseDto responseDto = new QueResponseDto("대기열 등록 완료", index);
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        // 2. 등록된 가게 정보 조회
+        HostResponse hostInfo = hostService.getHost(id);
+
+        // 3. 최종 응답 생성
+        QueueRegistrationResponse response = QueueRegistrationResponse.builder()
+                .message("대기열 등록에 성공했습니다.")
+                .waitingNumber(waitingNumber)
+                .hostInfo(hostInfo)
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    /**
-     * [수정] 롱폴링을 제거하고, 현재 대기 순번을 즉시 반환하도록 변경
-     */
     @Operation(summary = "내 대기 순번 즉시 확인", description = "자신의 현재 대기 순번을 즉시 확인합니다.")
     @GetMapping("/{id}/position/")
     public ResponseEntity<QueResponseDto> getMyPosition(
