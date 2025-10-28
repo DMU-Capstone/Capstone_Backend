@@ -3,6 +3,7 @@ package com.waitit.capstone.domain.queue.controller;
 import com.waitit.capstone.domain.manager.dto.HostResponse;
 import com.waitit.capstone.domain.manager.service.HostService;
 import com.waitit.capstone.domain.queue.QueueMapper;
+import com.waitit.capstone.domain.queue.dto.MyQueueStatusResponse;
 import com.waitit.capstone.domain.queue.dto.QueResponseDto;
 import com.waitit.capstone.domain.queue.dto.QueueDto;
 import com.waitit.capstone.domain.queue.dto.QueueRegistrationResponse;
@@ -24,19 +25,16 @@ import org.springframework.web.bind.annotation.*;
 public class QueueController {
     private final QueueService queueService;
     private final QueueMapper queueMapper;
-    private final HostService hostService; // HostService 주입 추가
+    private final HostService hostService;
 
     @Operation(summary = "대기열 등록", description = "특정 가게의 대기열에 사용자를 등록하고, 등록된 가게의 상세 정보를 함께 반환합니다.")
     @PostMapping("/{id}")
     public ResponseEntity<QueueRegistrationResponse> registerQueue(@PathVariable Long id, @RequestBody QueueRequest queueRequest, HttpServletRequest request){
-        // 1. 대기열 등록
         QueueDto dto = queueMapper.requestToDto(queueRequest);
         int waitingNumber = queueService.registerQueue(id, dto);
 
-        // 2. 등록된 가게 정보 조회
         HostResponse hostInfo = hostService.getHost(id);
 
-        // 3. 최종 응답 생성
         QueueRegistrationResponse response = QueueRegistrationResponse.builder()
                 .message("대기열 등록에 성공했습니다.")
                 .waitingNumber(waitingNumber)
@@ -57,6 +55,16 @@ public class QueueController {
 
         QueResponseDto responseDto = new QueResponseDto("현재 대기 순번입니다.", currentPosition);
         return ResponseEntity.ok(responseDto);
+    }
+
+    /**
+     * [추가] 나의 실시간 대기 현황 조회 API
+     */
+    @Operation(summary = "나의 실시간 대기 현황 조회", description = "전화번호를 통해 현재 대기 중인 가게의 상세 현황을 조회합니다.")
+    @GetMapping("/my-status")
+    public ResponseEntity<MyQueueStatusResponse> getMyQueueStatus(@RequestParam String phoneNumber) {
+        MyQueueStatusResponse response = queueService.getMyQueueStatus(phoneNumber);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "대기열 등록 취소", description = "대기열 등록을 취소합니다.")

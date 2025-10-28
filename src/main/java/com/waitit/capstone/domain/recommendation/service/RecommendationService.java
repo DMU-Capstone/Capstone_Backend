@@ -9,13 +9,12 @@ import com.waitit.capstone.domain.recommendation.dto.NearbyHostResponse;
 import com.waitit.capstone.domain.recommendation.dto.RecommendationResponse;
 import com.waitit.capstone.domain.kakao.service.KakaoMapsService;
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RList;
-import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,7 +25,6 @@ public class RecommendationService {
     private final HostRepository hostRepository;
     private final QueueService queueService;
     private final KakaoMapsService kakaoMapsService;
-    private final RedissonClient redissonClient;
 
     private static final int AVG_WAIT_TIME_PER_PERSON = 5;
     private static final int SHORT_WAIT_THRESHOLD = 30;
@@ -36,20 +34,29 @@ public class RecommendationService {
     private static final String CATEGORY_ATTRACTION = "AT4";
 
     public RecommendationResponse recommend(String phoneNumber, double latitude, double longitude) {
-        List<Host> activeHosts = hostRepository.findAllByIsActive(true);
+        // [수정] DB가 아닌, 실제 대기열이 있는 가게 ID 목록을 QueueService에서 가져옴
+        Set<Long> activeHostIds = queueService.getActiveHostIds();
+        if (activeHostIds.isEmpty()) {
+            // 활성화된 가게가 없으면, 대기 중이 아닌 것으로 간주하고 빈 주변 가게 목록 반환
+            return RecommendationResponse.builder()
+                    .isWaiting(false)
+                    .hostRecommendations(List.of())
+                    .build();
+        }
+        List<Host> activeHosts = hostRepository.findAllById(activeHostIds);
 
+        // 사용자가 대기 중인 가게를 찾음
         Optional<Host> waitingHostOptional = activeHosts.stream()
                 .filter(host -> {
-                    QueueDto userDto = QueueDto.builder().phoneNumber(phoneNumber).name("user").count(1).build();
-                    return queueService.getMyPosition(host.getId(), userDto) > 0;
+                    // getMyPosition은 0보다 큰 값을 반환하면 대기 중임을 의미
+                    return queueService.getMyPosition(host.getId(), QueueDto.builder().phoneNumber(phoneNumber).build()) > 0;
                 })
                 .findFirst();
 
         // 1. 사용자가 대기 중일 경우
         if (waitingHostOptional.isPresent()) {
             Host waitingHost = waitingHostOptional.get();
-            QueueDto userDto = QueueDto.builder().phoneNumber(phoneNumber).name("user").count(1).build();
-            int myPosition = queueService.getMyPosition(waitingHost.getId(), userDto);
+            int myPosition = queueService.getMyPosition(waitingHost.getId(), QueueDto.builder().phoneNumber(phoneNumber).build());
             int estimatedWaitTime = myPosition * AVG_WAIT_TIME_PER_PERSON;
 
             KakaoSearchResponse recommendations;
@@ -60,7 +67,7 @@ public class RecommendationService {
             }
             return RecommendationResponse.builder()
                     .isWaiting(true)
-                    .placeRecommendations(recommendations) // 수정
+                    .placeRecommendations(recommendations)
                     .build();
         } 
         // 2. 사용자가 대기 중이 아닐 경우
@@ -68,17 +75,16 @@ public class RecommendationService {
             List<NearbyHostResponse> nearbyHosts = activeHosts.stream()
                     .map(host -> {
                         double distance = calculateDistance(latitude, longitude, host.getLatitude(), host.getLongitude());
-                        RList<QueueDto> queue = redissonClient.getList("waitList:" + host.getId());
-                        return new Object[]{host, distance, queue.size()};
+                        int waitingCount = queueService.getQueueByHostId(host.getId()).size();
+                        return NearbyHostResponse.from(host, waitingCount, distance);
                     })
-                    .filter(obj -> (double) obj[1] <= SEARCH_RADIUS)
-                    .sorted((obj1, obj2) -> Double.compare((double) obj1[1], (double) obj2[1]))
-                    .map(obj -> NearbyHostResponse.from((Host) obj[0], (int) obj[2], (double) obj[1]))
+                    .filter(nearbyHost -> nearbyHost.getDistance() <= SEARCH_RADIUS)
+                    .sorted((h1, h2) -> Integer.compare(h1.getDistance(), h2.getDistance()))
                     .collect(Collectors.toList());
             
             return RecommendationResponse.builder()
                     .isWaiting(false)
-                    .hostRecommendations(nearbyHosts) // 수정
+                    .hostRecommendations(nearbyHosts)
                     .build();
         }
     }
